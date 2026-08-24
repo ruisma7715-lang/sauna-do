@@ -68,6 +68,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 .fr{position:relative;cursor:pointer}
 .fr.lock{cursor:default}
 .fr .rr{display:block;font-style:normal;font-size:10px;color:var(--hinoki);letter-spacing:-1px;line-height:1.2}
+.fr .dup{font-size:10px;color:var(--sub);letter-spacing:0;margin-left:3px;font-weight:800}
 .fr.lock .rr{color:var(--dim)}
 .fr.on{background:var(--sakura-lt);border-radius:14px;box-shadow:inset 0 0 0 2px var(--sakura)}
 .fr .cur{
@@ -1472,8 +1473,9 @@ const BUDDIES = [
 
 const BUDDY_BY_ID = Object.fromEntries(BUDDIES.map(b => [b.id, b]));
 
-/* 引いたときの当たりやすさ。★が多いほど出にくい */
-const RARE_WEIGHT = { 1: 44, 2: 30, 3: 20, 4: 6 };
+/* 引いたときの当たりやすさ。★が多いほど出にくい。
+   1回行くごとに引けるので、★1〜3はすぐ集まり、★4だけが長い目標として残る配分。 */
+const RARE_WEIGHT = { 1: 40, 2: 28, 3: 22, 4: 10 };
 
 const buddySvg = (b, cls) => `
   <svg class="buddy ${cls || ""}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 104" role="img" aria-label="${esc(b ? b.nm : "アバター")}">
@@ -1600,8 +1602,8 @@ const ITEMS = [
     <circle cx="100" cy="20" r="4.2" fill="#EF6E96"/>` }
 ];
 
-/* サウナに5回行くごとに、カードが1枚引ける */
-const DRAW_STEP = 5;
+/* サウナに1回行くごとに、カードが1枚引ける */
+const DRAW_STEP = 1;
 
 /* もとは くじ限定だった飾り。いまは通いつづければ手に入る */
 const RARE = [
@@ -2024,7 +2026,7 @@ function renderTickets() {
       <div class="tkb">
         <div class="tkt">サウナカード</div>
         <div class="tkn"><b>${left}</b> 枚</div>
-        <div class="tkd">あと <b>${rest}</b> 回ととのうと もう1枚／図鑑 ${got} / ${BUDDIES.length}</div>
+        <div class="tkd">サウナに1回行くと もう1枚／図鑑 ${got} / ${BUDDIES.length}</div>
       </div>
       ${left ? '<button class="btn pri" data-usetk="1">カードを引く</button>' : ""}
     </div>
@@ -2038,18 +2040,17 @@ function renderTickets() {
     </div>`;
 }
 
-/* カードを1枚引く。★が多いほど出にくい。
-   まだ持っていないアバターを優先し、全部そろったら重複も出す。 */
+/* カードを1枚引く。12種すべてが対象で、★が多いほど出にくい。
+   未所持を優先すると★4がただの「最後の1枚」になってしまい、
+   レア度の意味が消えるので、あえて重複も出る素直な抽選にしている。 */
 function pickBuddy() {
-  const yet = BUDDIES.filter(b => !gotBuddy(b.id));
-  const pool = yet.length ? yet : BUDDIES;
-  const total = pool.reduce((s, b) => s + (RARE_WEIGHT[b.rare] || 1), 0);
+  const total = BUDDIES.reduce((s, b) => s + (RARE_WEIGHT[b.rare] || 1), 0);
   let r = Math.random() * total;
-  for (const b of pool) {
+  for (const b of BUDDIES) {
     r -= (RARE_WEIGHT[b.rare] || 1);
     if (r <= 0) return b;
   }
-  return pool[pool.length - 1];
+  return BUDDIES[BUDDIES.length - 1];
 }
 
 async function drawGacha() {
@@ -2058,6 +2059,11 @@ async function drawGacha() {
   const isNew = !gotBuddy(hit.id);
 
   profile.usedTickets = (profile.usedTickets || 0) + 1;
+
+  /* 同じ子が出ても無駄にならないよう、会った回数を数えておく */
+  if (!profile.buddyCount) profile.buddyCount = {};
+  profile.buddyCount[hit.id] = (profile.buddyCount[hit.id] || 0) + 1;
+
   if (isNew) {
     profile.buddies = ownedBuddies().concat([hit.id]);
     if (!profile.buddy) profile.buddy = hit.id;     // 最初の1体は自動で相棒に
@@ -2072,13 +2078,15 @@ function renderFriends() {
   const got = ownedBuddies().length;
   $("fr-count").textContent = `　${got} / ${BUDDIES.length}`;
   const cur = activeBuddy();
+  const cnt = profile.buddyCount || {};
   $("friends").innerHTML = BUDDIES.map(b => {
     const ok = gotBuddy(b.id);
     const on = cur && cur.id === b.id;
+    const n = cnt[b.id] || 0;
     return `<div class="fr ${ok ? "" : "lock"} ${on ? "on" : ""}" ${ok ? `data-setbuddy="${b.id}"` : ""}>
       ${ok ? buddySvg(b, "sm") : '<div class="frlock">？</div>'}
       <span>${ok ? esc(b.nm) : "？？？"}</span>
-      <em class="rr">${"★".repeat(b.rare)}</em>
+      <em class="rr">${"★".repeat(b.rare)}${n > 1 ? `<b class="dup">×${n}</b>` : ""}</em>
       ${on ? '<i class="cur">いっしょ</i>' : ""}
     </div>`;
   }).join("");
@@ -2999,8 +3007,10 @@ function cardBurst(bud, isNew) {
   const b = $("burst");
   $("burst-mark").innerHTML =
     `<div class="cardhit r${bud.rare}">${buddySvg(bud, "big")}</div>`;
+  const n = (profile.buddyCount || {})[bud.id] || 1;
   $("burst-msg").innerHTML =
-    `${"★".repeat(bud.rare)}<br><b>${esc(bud.nm)}</b><br>${isNew ? "図鑑に加わった！" : "もう持っていた…"}`;
+    `${"★".repeat(bud.rare)}<br><b>${esc(bud.nm)}</b><br>` +
+    (isNew ? "図鑑に加わった！" : `また会えた（${n}回目）`);
   b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
   clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2800);
 }
@@ -3075,6 +3085,7 @@ async function importJSON(file) {
       if (data.profile.equip) profile.equip = data.profile.equip;
       if (typeof data.profile.usedTickets === "number") profile.usedTickets = data.profile.usedTickets;
       if (Array.isArray(data.profile.buddies)) profile.buddies = data.profile.buddies;
+      if (data.profile.buddyCount) profile.buddyCount = data.profile.buddyCount;
       if (typeof data.profile.buddy === "string") profile.buddy = data.profile.buddy;
       if (data.profile.missions) profile.missions = data.profile.missions;
       if (typeof data.profile.bonus === "number") profile.bonus = data.profile.bonus;
@@ -3458,6 +3469,7 @@ function closeWelcome() {
   if (!profile.equip) profile.equip = {};
   if (typeof profile.usedTickets !== "number") profile.usedTickets = 0;
   if (!Array.isArray(profile.buddies)) profile.buddies = [];
+  if (!profile.buddyCount) profile.buddyCount = {};
   if (typeof profile.buddy !== "string") profile.buddy = "";
   if (!profile.missions) profile.missions = {};
   if (typeof profile.bonus !== "number") profile.bonus = 0;
