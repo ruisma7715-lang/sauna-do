@@ -5,7 +5,7 @@
    接頭辞で絞らずに「自分以外を消す」と、同じサイトにある旧版（sauna-tabi-*）の
    控えまで巻き添えで消してしまう。ここは必ず前方一致で判定すること。 */
 const PREFIX = "saunado-";
-const CACHE = PREFIX + "v7";
+const CACHE = PREFIX + "v8";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
