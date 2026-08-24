@@ -1563,6 +1563,18 @@ const BUDDIES = [
     <path d="M44 74q6 4 12 0" fill="none" stroke="#6B4E12" stroke-width="2.4" stroke-linecap="round"/>
     <g fill="#FFF6D6"><path d="M16 30l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/><path d="M84 24l2.4 5.6 5.6 2.4-5.6 2.4L84 40l-2.4-5.6L76 32l5.6-2.4z"/></g>` },
 
+  /* always:true は最初から選べる。カードの抽選には出さない */
+  { id:"okappa", nm:"おかっぱさん", rare:0, always:true, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#EBA7BC"/>
+    <path d="M23 54c0-16 12-29 27-29s27 13 27 29v20q0 6-6 6h-5V50H34v30h-5q-6 0-6-6z" fill="#231C1E"/>
+    <ellipse cx="50" cy="55" rx="21" ry="22" fill="#FBDDC6"/>
+    <path d="M28 52a22 22 0 0 1 44 0q-3-19-22-19T28 52z" fill="#231C1E"/>
+    <circle class="eyeb" cx="41" cy="57" r="3.4" fill="#2A1D18"/>
+    <circle class="eyeb" cx="59" cy="57" r="3.4" fill="#2A1D18"/>
+    <path d="M46 65q4 4 8 0" fill="none" stroke="#C4736A" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="33" cy="63" r="3.6" fill="#F5AEB6" opacity=".6"/>
+    <circle cx="67" cy="63" r="3.6" fill="#F5AEB6" opacity=".6"/>` },
+
   { id:"sagami", nm:"サ神さま", rare:4, body:`
     <ellipse cx="50" cy="18" rx="17" ry="5" fill="none" stroke="#F5D97A" stroke-width="3.4"/>
     <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#EDE6F5"/>
@@ -1587,7 +1599,10 @@ const buddySvg = (b, cls) => `
 
 /* 集めたアバターと、いま連れているアバター */
 const ownedBuddies = () => (profile.buddies || []);
-const gotBuddy = id => ownedBuddies().indexOf(id) >= 0;
+/* always の子は引かなくても最初から持っている扱い */
+const gotBuddy = id => (BUDDY_BY_ID[id] && BUDDY_BY_ID[id].always) || ownedBuddies().indexOf(id) >= 0;
+/* カードで集める対象（＝図鑑の分母） */
+const CARD_BUDDIES = BUDDIES.filter(b => !b.always);
 /* いまアバターにしている子。null なら「じぶん（人のすがた）」 */
 function activeBuddy() {
   const id = profile.buddy;
@@ -1832,8 +1847,10 @@ function avatarSvg(opt) {
       ${bg ? bg.svg : sky.deco}
       ${seat ? seat.svg : ""}
       ${bud
-        /* 集めた子をアバターにしている場合。飾りは人の体に合わせて描いてあるので着せない */
-        ? `<g class="chara"><g transform="translate(45,62) scale(1.1)">${bud.body}</g></g>`
+        /* 集めた子をアバターにしている場合。
+           小さく置くと「連れている子」に見えてしまうので、画面いっぱいの主役として大きく描く。
+           飾りは人の体に合わせて描いてあるので着せない。 */
+        ? `<g class="chara"><g transform="translate(30,26) scale(2)">${bud.body}</g></g>`
         : `<g class="chara">
         ${back ? back.svg : ""}
         ${bottoms ? bottoms.svg : AV_LEGS}
@@ -2123,7 +2140,7 @@ function cardHtml(f) {
 function renderTickets() {
   const left = drawsLeft(), vis = summary().vis;
   const rest = DRAW_STEP - (vis % DRAW_STEP);
-  const got = ownedBuddies().length;
+  const got = CARD_BUDDIES.filter(b => gotBuddy(b.id)).length;
   const ms = missionState();
   $("ticket").innerHTML = `
     <div class="tk">
@@ -2131,7 +2148,7 @@ function renderTickets() {
       <div class="tkb">
         <div class="tkt">サウナカード</div>
         <div class="tkn"><b>${left}</b> 枚</div>
-        <div class="tkd">サウナに1回行くと もう1枚／図鑑 ${got} / ${BUDDIES.length}</div>
+        <div class="tkd">サウナに1回行くと もう1枚／図鑑 ${got} / ${CARD_BUDDIES.length}</div>
       </div>
       ${left ? '<button class="btn pri" data-usetk="1">カードを引く</button>' : ""}
     </div>
@@ -2149,13 +2166,13 @@ function renderTickets() {
    未所持を優先すると★4がただの「最後の1枚」になってしまい、
    レア度の意味が消えるので、あえて重複も出る素直な抽選にしている。 */
 function pickBuddy() {
-  const total = BUDDIES.reduce((s, b) => s + (RARE_WEIGHT[b.rare] || 1), 0);
+  const total = CARD_BUDDIES.reduce((s, b) => s + (RARE_WEIGHT[b.rare] || 1), 0);
   let r = Math.random() * total;
-  for (const b of BUDDIES) {
+  for (const b of CARD_BUDDIES) {
     r -= (RARE_WEIGHT[b.rare] || 1);
     if (r <= 0) return b;
   }
-  return BUDDIES[BUDDIES.length - 1];
+  return CARD_BUDDIES[CARD_BUDDIES.length - 1];
 }
 
 async function drawGacha() {
@@ -2178,8 +2195,8 @@ async function drawGacha() {
 
 /* 図鑑。まだ出ていないアバターは影で見せて、集めたくなるようにする */
 function renderFriends() {
-  const got = ownedBuddies().length;
-  $("fr-count").textContent = `　${got} / ${BUDDIES.length}`;
+  const got = CARD_BUDDIES.filter(b => gotBuddy(b.id)).length;
+  $("fr-count").textContent = `　${got} / ${CARD_BUDDIES.length}`;
   const cur = activeBuddy();
   const cnt = profile.buddyCount || {};
 
@@ -2198,7 +2215,7 @@ function renderFriends() {
     return `<div class="fr ${ok ? "" : "lock"} ${on ? "on" : ""}" ${ok ? `data-setbuddy="${b.id}"` : ""}>
       ${ok ? buddySvg(b, "sm") : '<div class="frlock">？</div>'}
       <span>${ok ? esc(b.nm) : "？？？"}</span>
-      <em class="rr">${"★".repeat(b.rare)}${n > 1 ? `<b class="dup">×${n}</b>` : ""}</em>
+      <em class="rr">${b.always ? "きほん" : "★".repeat(b.rare)}${n > 1 ? `<b class="dup">×${n}</b>` : ""}</em>
       ${on ? '<i class="cur">これ</i>' : ""}
     </div>`;
   }).join("");
