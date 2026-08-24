@@ -1817,7 +1817,9 @@ function daysSinceLast() {
   return Math.floor((Date.now() - new Date(last + "T00:00:00").getTime()) / 86400000);
 }
 
-function ownedCount() { return Math.min(ITEMS.length, Math.floor(summary().vis / ITEM_STEP)); }
+/* 上限は ALL_ITEMS の数。ITEMS だけで止めると、
+   後半のもと「くじ限定」だった5つが永久に開かなくなる。 */
+function ownedCount() { return Math.min(ALL_ITEMS.length, Math.floor(summary().vis / ITEM_STEP)); }
 
 function avatarSvg(opt) {
   const ex = opt && opt.exportMode;
@@ -2516,7 +2518,7 @@ function renderHome() {
                : `<span class="lvn">最高位に とうたつ！</span>`);
 
   const owned = ownedCount(), vis = summary().vis;
-  if (owned >= ITEMS.length) {
+  if (owned >= ALL_ITEMS.length) {
     $("nx-msg").textContent = "アイテムを ぜんぶ あつめました！";
     $("nx-bar").style.width = "100%";
   } else {
@@ -2525,21 +2527,16 @@ function renderHome() {
     $("nx-bar").style.width = (done / ITEM_STEP * 100) + "%";
   }
   $("item-count").textContent = `　${owned}/${ALL_ITEMS.length}`;
+  /* 飾りはすべて「通った回数」で順に開く。
+     もとは後半5つが くじ限定だったが、くじを廃止したので同じ扱いにした。 */
   $("items").innerHTML =
-    ITEMS.map((it, i) => {
+    ALL_ITEMS.map((it, i) => {
+      const cls = it.rare ? " rare" : "";
       if (i >= owned) {
-        return `<div class="item lock"><span class="lk">🔒</span><span>あと${(i + 1) * ITEM_STEP - vis}回</span></div>`;
+        return `<div class="item lock${cls}"><span class="lk">🔒</span><span>あと${(i + 1) * ITEM_STEP - vis}回</span></div>`;
       }
       const on = profile.equip[it.slot] === it.id;
-      return `<button class="item ${on ? "on" : ""}" data-item="${it.id}" aria-pressed="${on}">
-        <svg viewBox="${it.vb}">${it.svg}</svg><span>${esc(it.nm)}</span></button>`;
-    }).join("") +
-    RARE.map(it => {
-      if (!hasItem(it)) {
-        return '<div class="item lock rare"><span class="lk">🎫</span><span>くじで</span></div>';
-      }
-      const on = profile.equip[it.slot] === it.id;
-      return `<button class="item rare ${on ? "on" : ""}" data-item="${it.id}" aria-pressed="${on}">
+      return `<button class="item${cls} ${on ? "on" : ""}" data-item="${it.id}" aria-pressed="${on}">
         <svg viewBox="${it.vb}">${it.svg}</svg><span>${esc(it.nm)}</span></button>`;
     }).join("");
 
