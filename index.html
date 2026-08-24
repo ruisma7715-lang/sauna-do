@@ -131,6 +131,23 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
   box-shadow:0 0 16px #fff,0 0 46px #FFD24D,0 0 90px #FF9EC4;
   animation:dwShine 1.5s ease-in-out infinite;
 }
+/* ★5は枠が虹色に流れ、光が脈打つ */
+#draw.r5 .dw-rays{
+  opacity:.72;
+  background:conic-gradient(from 0deg,#FFF3C4,#FFD24D,#FF9EC4,#C6A9F0,#8FD4F5,#9BE7A6,#FFF3C4);
+  mask-image:radial-gradient(circle,transparent 10%,#000 52%);
+  -webkit-mask-image:radial-gradient(circle,transparent 10%,#000 52%);
+  animation:dwSpin 5s linear infinite;
+}
+#draw.r5 .dw-front{
+  border-color:#FFF3C4;
+  box-shadow:0 0 20px #fff,0 0 60px #FFD24D,0 0 110px #FF9EC4,0 0 150px #C6A9F0;
+  animation:dwLegend 1.1s ease-in-out infinite;
+}
+@keyframes dwLegend{
+  0%,100%{filter:brightness(1) saturate(1);transform:scale(1)}
+  50%{filter:brightness(1.28) saturate(1.25);transform:scale(1.035)}
+}
 @keyframes dwShine{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
 .dw-front .buddy{width:132px;height:138px}
 
@@ -161,7 +178,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 /* ================= サウナ図鑑 ================= */
 .fr{position:relative;cursor:pointer}
 .fr.lock{cursor:default}
-.fr .rr{display:block;font-style:normal;font-size:10px;color:var(--hinoki);letter-spacing:-1px;line-height:1.2}
+.fr .rr{display:block;font-style:normal;font-size:9.5px;color:var(--hinoki);letter-spacing:-1.4px;line-height:1.2;white-space:nowrap}
 .fr .dup{font-size:10px;color:var(--sub);letter-spacing:0;margin-left:3px;font-weight:800}
 .frhint{font-size:11.5px;color:var(--sub);margin:-6px 0 8px}
 .selfic{font-size:30px;line-height:1.5;text-align:center}
@@ -176,7 +193,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 .tkcard.big{font-size:60px}
 .cardhit{border-radius:18px;padding:6px}
 .cardhit.r3{background:radial-gradient(circle,#FFF1C9,transparent 70%)}
-.cardhit.r4{background:radial-gradient(circle,#FFE79A,transparent 72%);animation:shine 1.4s ease-in-out infinite}
+.cardhit.r4{background:radial-gradient(circle,#FFE79A,transparent 72%);animation:shine 1.4s ease-in-out infinite}`n.cardhit.r5{background:radial-gradient(circle,#FFF3C4,transparent 74%);animation:shine 1s ease-in-out infinite}
 @keyframes shine{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
 .buddy.big{width:120px;height:125px}
 
@@ -1593,6 +1610,51 @@ const BUDDIES = [
       <path d="M31 45l6-5 3 4-6 5z"/><path d="M55 45l6-5 3 4-6 5z"/>
     </g>` },
 
+  /* ---- ★5 伝説 ---- */
+  { id:"capyking", nm:"カピバラ大王", rare:5, body:`
+    <path d="M14 104q4-26 16-31l8 31zM86 104q-4-26-16-31l-8 31z" fill="#B4332C"/>
+    <path d="M14 104q4-26 16-31l3 4-9 27zM86 104q-4-26-16-31l-3 4 9 27z" fill="#8E241F"/>
+    <path d="M26 104c0-14 11-25 24-25s24 11 24 25z" fill="#9A7250"/>
+    <circle cx="31" cy="43" r="6" fill="#7E5C3F"/>
+    <circle cx="69" cy="43" r="6" fill="#7E5C3F"/>
+    <path d="M25 60c0-13 11-22 25-22s25 9 25 22v6c0 9-11 15-25 15s-25-6-25-15z" fill="#B08A64"/>
+    <path d="M32 34l5 9 6-11 7 11 7-11 6 11 5-9 3 11H29z" fill="#F2C14E" stroke="#D4A02F" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="50" cy="30" r="3.2" fill="#E9697F"/>
+    <path d="M36 58q5 4 10 0M54 58q5 4 10 0" fill="none" stroke="#3E2E20" stroke-width="3.2" stroke-linecap="round"/>
+    <ellipse cx="50" cy="73" rx="13" ry="9" fill="#C39B72"/>
+    <ellipse cx="45" cy="71" rx="2.2" ry="1.6" fill="#3E2E20"/>
+    <ellipse cx="55" cy="71" rx="2.2" ry="1.6" fill="#3E2E20"/>
+    <path d="M44 77q6 4 12 0" fill="none" stroke="#3E2E20" stroke-width="2.4" stroke-linecap="round"/>` },
+
+  { id:"dragon", nm:"サウナドラゴン", rare:5, body:`
+    <path d="M20 96q-12-14-2-26 6 10 14 12zM80 96q12-14 2-26-6 10-14 12z" fill="#7FD1C4" opacity=".9"/>
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#2E8C7E"/>
+    <path d="M38 30l-6-16 14 8zM62 30l6-16-14 8z" fill="#F2C14E"/>
+    <ellipse cx="50" cy="56" rx="24" ry="22" fill="#43A897"/>
+    <path d="M30 44q20-10 40 0-6-12-20-12t-20 12z" fill="#5FC4B0"/>
+    <circle class="eyeb" cx="40" cy="53" r="4.4" fill="#1E3B36"/>
+    <circle class="eyeb" cx="60" cy="53" r="4.4" fill="#1E3B36"/>
+    <ellipse cx="50" cy="68" rx="12" ry="8" fill="#5FC4B0"/>
+    <circle cx="45" cy="66" r="1.8" fill="#1E3B36"/>
+    <circle cx="55" cy="66" r="1.8" fill="#1E3B36"/>
+    <g fill="none" stroke="#EAFBF7" stroke-width="2.6" stroke-linecap="round" opacity=".85">
+      <path d="M43 78q-3 6 0 10M57 78q3 6 0 10"/>
+    </g>` },
+
+  { id:"seirei", nm:"ロウリュの精霊", rare:5, body:`
+    <path d="M28 104q-4-22 4-34t18-10 18 10 4 34z" fill="#DCEFF5" opacity=".92"/>
+    <ellipse cx="50" cy="54" rx="23" ry="22" fill="#F2FAFD"/>
+    <ellipse cx="50" cy="54" rx="23" ry="22" fill="none" stroke="#BFE3EE" stroke-width="2"/>
+    <path d="M27 50a23 23 0 0 1 46 0q-10-13-23-13T27 50z" fill="#CFE9F2"/>
+    <circle class="eyeb" cx="41" cy="55" r="3.8" fill="#3E6B78"/>
+    <circle class="eyeb" cx="59" cy="55" r="3.8" fill="#3E6B78"/>
+    <path d="M44 64q6 5 12 0" fill="none" stroke="#7FA9B6" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="33" cy="61" r="3.6" fill="#9FD8E8" opacity=".55"/>
+    <circle cx="67" cy="61" r="3.6" fill="#9FD8E8" opacity=".55"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".9">
+      <path d="M34 26q-4-6 0-12M50 20q-4-6 0-12M66 26q-4-6 0-12"/>
+    </g>` },
+
   { id:"sagami", nm:"サ神さま", rare:4, body:`
     <ellipse cx="50" cy="18" rx="17" ry="5" fill="none" stroke="#F5D97A" stroke-width="3.4"/>
     <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#EDE6F5"/>
@@ -1608,7 +1670,7 @@ const BUDDY_BY_ID = Object.fromEntries(BUDDIES.map(b => [b.id, b]));
 
 /* 引いたときの当たりやすさ。★が多いほど出にくい。
    1回行くごとに引けるので、★1〜3はすぐ集まり、★4だけが長い目標として残る配分。 */
-const RARE_WEIGHT = { 1: 40, 2: 28, 3: 22, 4: 10 };
+const RARE_WEIGHT = { 1: 36, 2: 26, 3: 20, 4: 14, 5: 4 };
 
 const buddySvg = (b, cls) => `
   <svg class="buddy ${cls || ""}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 104" role="img" aria-label="${esc(b ? b.nm : "アバター")}">
@@ -3221,13 +3283,18 @@ const DRAW_FX = {
   2: { wait: 760,  dim: "dim",  colors: ["#FFD9E7", "#FFE6EE"] },
   3: { wait: 1200, dim: "dim",  colors: ["#FFD98A", "#FFE9B8", "#FFF3D6"] },
   4: { wait: 1750, dim: "dim2", colors: ["#FF9EC4", "#FFD24D", "#9BE7A6", "#8FD4F5", "#C6A9F0"] },
+  5: { wait: 2600, dim: "dim2", colors: ["#FFF3C4", "#FFD24D", "#FF9EC4", "#C6A9F0", "#8FD4F5", "#9BE7A6", "#FFFFFF"] },
 };
 
 /* ためている間の音とバイブ。★が多いほど長く強く、期待が高まる */
 function drawSuspense(rare, waitMs) {
   const s = waitMs / 1000;
-  if (rare >= 3) Sfx.rise(0.5, s, 180, rare === 4 ? 900 : 620);
-  if (rare === 4) {
+  if (rare >= 3) Sfx.rise(0.5, s, 180, rare >= 5 ? 1300 : rare === 4 ? 900 : 620);
+  if (rare === 5) {
+    /* 伝説だけ、上昇音を二重にして厚くする */
+    Sfx.rise(0.5, s, 90, 650);
+    Sfx.vibe([0, 30, 70, 30, 70, 50, 60, 70, 80, 100, 100, 140, 140, 420]);
+  } else if (rare === 4) {
     Sfx.vibe([0, 40, 90, 40, 90, 60, 80, 80, 120, 200]);
   } else if (rare === 3) {
     Sfx.vibe([0, 40, 120, 40, 120, 60]);
@@ -3249,13 +3316,21 @@ function drawFanfare(rare) {
     [HZ.C5, HZ.E5, HZ.G5, HZ.C6].forEach((f, i) => Sfx.note(f, i * 0.085, 0.3, "triangle", 0.17));
     Sfx.note(HZ.E6, 0.42, 0.6, "sine", 0.1);
     Sfx.vibe([0, 50, 70, 50, 70, 130]);
-  } else {
-    /* ★4だけ、和音を重ねて厚くする */
+  } else if (rare === 4) {
+    /* ★4は和音を重ねて厚くする */
     [HZ.C5, HZ.E5, HZ.G5, HZ.C6, HZ.E6, HZ.G6].forEach((f, i) =>
       Sfx.note(f, i * 0.075, 0.45, "triangle", 0.16));
     [HZ.C6, HZ.E6, HZ.G6, HZ.C7].forEach((f, i) => Sfx.note(f, 0.5 + i * 0.05, 0.9, "sine", 0.09));
     Sfx.note(HZ.C5 / 2, 0.5, 1.1, "sine", 0.12);
     Sfx.vibe([0, 90, 60, 90, 60, 180, 90, 320]);
+  } else {
+    /* ★5は駆け上がってから和音で伸ばし、鐘の音を重ねる */
+    [HZ.C5, HZ.D5, HZ.E5, HZ.G5, HZ.A5, HZ.C6, HZ.E6, HZ.G6, HZ.C7].forEach((f, i) =>
+      Sfx.note(f, i * 0.062, 0.5, "triangle", 0.16));
+    [HZ.C6, HZ.E6, HZ.G6, HZ.C7].forEach(f => Sfx.note(f, 0.62, 1.8, "sine", 0.085));
+    Sfx.note(HZ.C5 / 2, 0.62, 2.0, "sine", 0.14);
+    Sfx.note(HZ.C7, 1.15, 1.4, "sine", 0.07);
+    Sfx.vibe([0, 120, 50, 120, 50, 120, 80, 260, 100, 520]);
   }
 }
 
@@ -3326,11 +3401,12 @@ function cardBurst(bud, isNew) {
        <div class="sub">${isNew ? "図鑑に加わった！" : `また会えた（${n}回目）`}</div>
        <div class="tap">タップで閉じる</div>`;
     $("dw-msg").classList.add("on");
-    sprinkle(fx.colors, bud.rare === 4 ? 46 : bud.rare === 3 ? 24 : 12);
+    sprinkle(fx.colors, bud.rare === 5 ? 80 : bud.rare === 4 ? 46 : bud.rare === 3 ? 24 : 12);
   });
 
-  /* めくれてから、少なくとも3秒はカードを眺められるようにする。★4はさらに長め */
-  after(500 + fx.wait + 480 + (bud.rare === 4 ? 4500 : 3000), closeDraw);
+  /* めくれてから、少なくとも3秒はカードを眺められるようにする。★が多いほど長め */
+  const hold = bud.rare === 5 ? 6000 : bud.rare === 4 ? 4500 : 3000;
+  after(500 + fx.wait + 480 + hold, closeDraw);
 }
 
 /* もらったアイテムを大きく見せる */
