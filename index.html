@@ -1563,17 +1563,24 @@ const BUDDIES = [
     <path d="M44 74q6 4 12 0" fill="none" stroke="#6B4E12" stroke-width="2.4" stroke-linecap="round"/>
     <g fill="#FFF6D6"><path d="M16 30l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/><path d="M84 24l2.4 5.6 5.6 2.4-5.6 2.4L84 40l-2.4-5.6L76 32l5.6-2.4z"/></g>` },
 
-  /* always:true は最初から選べる。カードの抽選には出さない */
+  /* always:true は最初から選べる。カードの抽選には出さない。
+     もとのアプリのキャラクターの絵柄をそのまま使っている
+     （黒いおかっぱ・太いフチの大きな白目・黒い服）。 */
   { id:"okappa", nm:"おかっぱさん", rare:0, always:true, body:`
-    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#EBA7BC"/>
-    <path d="M23 54c0-16 12-29 27-29s27 13 27 29v20q0 6-6 6h-5V50H34v30h-5q-6 0-6-6z" fill="#231C1E"/>
-    <ellipse cx="50" cy="55" rx="21" ry="22" fill="#FBDDC6"/>
-    <path d="M28 52a22 22 0 0 1 44 0q-3-19-22-19T28 52z" fill="#231C1E"/>
-    <circle class="eyeb" cx="41" cy="57" r="3.4" fill="#2A1D18"/>
-    <circle class="eyeb" cx="59" cy="57" r="3.4" fill="#2A1D18"/>
-    <path d="M46 65q4 4 8 0" fill="none" stroke="#C4736A" stroke-width="2.4" stroke-linecap="round"/>
-    <circle cx="33" cy="63" r="3.6" fill="#F5AEB6" opacity=".6"/>
-    <circle cx="67" cy="63" r="3.6" fill="#F5AEB6" opacity=".6"/>` },
+    <path d="M22 52c0-17 12-30 28-30s28 13 28 30v18c0 5-3 8-8 8H30c-5 0-8-3-8-8z" fill="#241C1A"/>
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#1E1E22"/>
+    <ellipse cx="50" cy="53" rx="23" ry="24" fill="#F7D4B8"/>
+    <path d="M44 65q6 9 12 0z" fill="#7C3542"/>
+    <ellipse class="tongue" cx="50" cy="68" rx="4.6" ry="3.4" fill="#E9697F"/>
+    <path d="M26 52a24 24 0 0 1 48 0q-6-12-12-9-6 2-12 2t-12-2q-6-3-12 9z" fill="#241C1A"/>
+    <path d="M47 50h6" fill="none" stroke="#15100F" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="38" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
+    <circle cx="62" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
+    <circle class="eyeb" cx="38" cy="47" r="3.3" fill="#241710"/>
+    <circle class="eyeb" cx="62" cy="47" r="3.3" fill="#241710"/>
+    <g class="glint" fill="#ffffff" opacity="0">
+      <path d="M31 45l6-5 3 4-6 5z"/><path d="M55 45l6-5 3 4-6 5z"/>
+    </g>` },
 
   { id:"sagami", nm:"サ神さま", rare:4, body:`
     <ellipse cx="50" cy="18" rx="17" ry="5" fill="none" stroke="#F5D97A" stroke-width="3.4"/>
