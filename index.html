@@ -966,6 +966,10 @@ nav button.on .icon{stroke-width:2.3}
     <div class="sec">この端末の状態</div>
     <div class="row"><div><div class="t">保存先</div><div class="d" id="i-store">–</div></div></div>
     <div class="row"><div><div class="t">記録している量</div><div class="d" id="i-size">–</div></div></div>
+    <div class="row">
+      <div><div class="t">カードの音とバイブ</div><div class="d" id="i-sfxd">–</div></div>
+      <button class="btn" id="i-sfx">切りかえ</button>
+    </div>
     <div class="sec">そのほか</div>
     <div class="row">
       <div><div class="t">すべての記録を消す</div><div class="d">元に戻せません</div></div>
@@ -2921,6 +2925,7 @@ function openPrefSheet(pref) {
 
 function renderInfo() {
   $("i-store").textContent = Store.mode;
+  $("i-sfxd").textContent = Sfx.on ? "鳴らす" : "鳴らさない";
   const bytes = new Blob([JSON.stringify(facilities)]).size;
   $("i-size").textContent = `${facilities.length} 施設・写真 ${summary().photos} 枚（およそ ${(bytes / 1048576).toFixed(2)} メガバイト）`;
 }
@@ -3145,6 +3150,71 @@ function ticketBurst(n) {
   clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2400);
 }
 
+/* ============ 音とバイブ ============
+   音声ファイルは持たず、その場で音を合成する（アプリを1ファイルのまま保つため）。
+   AudioContext は「タップされてから」でないと鳴らせない決まりなので、
+   カードを引く操作の中で初めて用意する。 */
+const Sfx = {
+  ctx: null,
+  get on() {
+    try { return localStorage.getItem("saunado:mute") !== "1"; } catch (e) { return true; }
+  },
+  set on(v) {
+    try { localStorage.setItem("saunado:mute", v ? "0" : "1"); } catch (e) { /* 保存できなくても鳴る */ }
+  },
+
+  ready() {
+    if (!this.on) return null;
+    try {
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        this.ctx = new AC();
+      }
+      if (this.ctx.state === "suspended") this.ctx.resume();
+      return this.ctx;
+    } catch (e) { return null; }
+  },
+
+  /* 単音。at は「いまから何秒後か」 */
+  note(freq, at, dur, type, vol) {
+    const c = this.ready();
+    if (!c) return;
+    const t = c.currentTime + at;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || "sine";
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol == null ? 0.18 : vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  },
+
+  /* 期待をあおる上昇音。ためている間ずっと鳴らす */
+  rise(at, dur, from, to) {
+    const c = this.ready();
+    if (!c) return;
+    const t = c.currentTime + at;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = "sawtooth";
+    o.frequency.setValueAtTime(from, t);
+    o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.075, t + dur * 0.8);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  },
+
+  vibe(pattern) {
+    try { if (this.on && navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* 非対応端末は何もしない */ }
+  },
+};
+
+/* ドレミ。音名で書けるほうが、あとから直しやすい */
+const HZ = { C5:523.25, D5:587.33, E5:659.25, G5:783.99, A5:880, C6:1046.5, E6:1318.5, G6:1568, C7:2093 };
+
 /* ============ カードを引く演出 ============
    裏向きのカードが出る → ためる → めくれる → アバター登場。
    ★が多いほど「ためる時間」が長く、光と粒が派手になる。
@@ -3155,6 +3225,42 @@ const DRAW_FX = {
   3: { wait: 1200, dim: "dim",  colors: ["#FFD98A", "#FFE9B8", "#FFF3D6"] },
   4: { wait: 1750, dim: "dim2", colors: ["#FF9EC4", "#FFD24D", "#9BE7A6", "#8FD4F5", "#C6A9F0"] },
 };
+
+/* ためている間の音とバイブ。★が多いほど長く強く、期待が高まる */
+function drawSuspense(rare, waitMs) {
+  const s = waitMs / 1000;
+  if (rare >= 3) Sfx.rise(0.5, s, 180, rare === 4 ? 900 : 620);
+  if (rare === 4) {
+    Sfx.vibe([0, 40, 90, 40, 90, 60, 80, 80, 120, 200]);
+  } else if (rare === 3) {
+    Sfx.vibe([0, 40, 120, 40, 120, 60]);
+  } else {
+    Sfx.vibe(20);
+  }
+}
+
+/* めくれた瞬間の音とバイブ。ここが当たりの手ごたえになる */
+function drawFanfare(rare) {
+  if (rare === 1) {
+    Sfx.note(HZ.C5, 0, 0.22, "triangle", 0.16);
+    Sfx.vibe(30);
+  } else if (rare === 2) {
+    Sfx.note(HZ.C5, 0, 0.16, "triangle", 0.16);
+    Sfx.note(HZ.E5, 0.11, 0.26, "triangle", 0.16);
+    Sfx.vibe([0, 35, 60, 35]);
+  } else if (rare === 3) {
+    [HZ.C5, HZ.E5, HZ.G5, HZ.C6].forEach((f, i) => Sfx.note(f, i * 0.085, 0.3, "triangle", 0.17));
+    Sfx.note(HZ.E6, 0.42, 0.6, "sine", 0.1);
+    Sfx.vibe([0, 50, 70, 50, 70, 130]);
+  } else {
+    /* ★4だけ、和音を重ねて厚くする */
+    [HZ.C5, HZ.E5, HZ.G5, HZ.C6, HZ.E6, HZ.G6].forEach((f, i) =>
+      Sfx.note(f, i * 0.075, 0.45, "triangle", 0.16));
+    [HZ.C6, HZ.E6, HZ.G6, HZ.C7].forEach((f, i) => Sfx.note(f, 0.5 + i * 0.05, 0.9, "sine", 0.09));
+    Sfx.note(HZ.C5 / 2, 0.5, 1.1, "sine", 0.12);
+    Sfx.vibe([0, 90, 60, 90, 60, 180, 90, 320]);
+  }
+}
 
 let drawTimers = [];
 function clearDrawTimers() { drawTimers.forEach(clearTimeout); drawTimers = []; }
@@ -3198,13 +3304,21 @@ function cardBurst(bud, isNew) {
 
   after(30, () => d.classList.add(fx.dim));
 
+  /* カードが飛び出す音 */
+  Sfx.note(660, 0.02, 0.14, "triangle", 0.13);
+
   /* ためる。★が多いほど長く、期待が高まる */
   after(520, () => card.classList.add("wait"));
+  drawSuspense(bud.rare, fx.wait);
 
   after(500 + fx.wait, () => {
     card.classList.remove("wait");
     card.classList.add("flip");
+    Sfx.note(320, 0, 0.1, "square", 0.09);   // めくる音
   });
+
+  /* めくれ終わりに合わせて、当たりの音を鳴らす */
+  after(500 + fx.wait + 430, () => drawFanfare(bud.rare));
 
   /* めくれ終わってから、名前と粒を出す */
   after(500 + fx.wait + 480, () => {
@@ -3312,6 +3426,14 @@ document.addEventListener("click", async ev => {
 
   /* カードの演出は、どこを触っても閉じられるようにする */
   if (hit("#draw")) { closeDraw(); return; }
+
+  if (hit("#i-sfx")) {
+    Sfx.on = !Sfx.on;
+    renderInfo();
+    if (Sfx.on) { Sfx.note(HZ.C5, 0, 0.14, "triangle", 0.16); Sfx.vibe(30); }
+    toast(Sfx.on ? "音とバイブを鳴らします" : "音とバイブを止めました");
+    return;
+  }
 
   const nav = hit("nav button");
   if (nav) { gotoTab(nav.dataset.tab); return; }
