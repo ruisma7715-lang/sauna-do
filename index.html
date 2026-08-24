@@ -64,6 +64,93 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 }
 .icon{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
+/* ================= カードを引く演出 ================= */
+#draw{
+  position:fixed;inset:0;z-index:500;display:none;
+  align-items:center;justify-content:center;flex-direction:column;
+  background:rgba(48,32,38,0);transition:background .45s ease;
+}
+#draw.on{display:flex}
+#draw.dim{background:rgba(48,32,38,.62)}
+#draw.dim2{background:rgba(28,16,22,.86)}
+
+/* 背後で回る光。★3以上でだけ出す */
+.dw-rays{
+  position:absolute;width:150vmax;height:150vmax;opacity:0;pointer-events:none;
+  background:conic-gradient(from 0deg,
+    transparent 0 6deg, rgba(255,255,255,.5) 6deg 12deg,
+    transparent 12deg 24deg, rgba(255,255,255,.35) 24deg 30deg, transparent 30deg 48deg);
+  animation:dwSpin 9s linear infinite;transition:opacity .5s ease;
+}
+#draw.r3 .dw-rays{opacity:.30;filter:hue-rotate(20deg) saturate(2) drop-shadow(0 0 8px #FFD98A)}
+#draw.r4 .dw-rays{
+  opacity:.5;
+  background:conic-gradient(from 0deg,#FF9EC4,#FFD98A,#9BE7A6,#8FD4F5,#C6A9F0,#FF9EC4);
+  mask-image:radial-gradient(circle,transparent 12%,#000 55%);
+  -webkit-mask-image:radial-gradient(circle,transparent 12%,#000 55%);
+}
+@keyframes dwSpin{to{transform:rotate(360deg)}}
+
+.dw-stage{perspective:900px;z-index:2}
+.dw-card{
+  width:170px;height:238px;position:relative;transform-style:preserve-3d;
+  transform:rotateY(180deg) scale(.2);opacity:0;
+}
+.dw-card.in{animation:dwIn .5s cubic-bezier(.2,1.5,.4,1) forwards}
+.dw-card.wait{animation:dwWait .42s ease-in-out infinite}
+.dw-card.flip{animation:dwFlip .55s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes dwIn{to{transform:rotateY(180deg) scale(1);opacity:1}}
+@keyframes dwWait{
+  0%,100%{transform:rotateY(180deg) scale(1) rotate(0)}
+  25%{transform:rotateY(180deg) scale(1.03) rotate(-3deg)}
+  75%{transform:rotateY(180deg) scale(1.03) rotate(3deg)}
+}
+@keyframes dwFlip{from{transform:rotateY(180deg) scale(1)}to{transform:rotateY(0) scale(1)}}
+
+.dw-face{
+  position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;
+  display:grid;place-content:center;box-shadow:0 14px 40px rgba(0,0,0,.35);
+}
+.dw-back{
+  transform:rotateY(180deg);
+  background:linear-gradient(150deg,#F491B2,#D5507B);
+  border:4px solid #FFE6EE;
+}
+.dw-back span{font-size:70px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.25))}
+.dw-front{background:linear-gradient(170deg,#FFFDFB,#FFEDF3);border:4px solid #FFD9E7}
+#draw.r3 .dw-front{border-color:#F4CE7A;box-shadow:0 0 34px #FFD98A}
+#draw.r4 .dw-front{
+  border-color:#FFDF8A;
+  box-shadow:0 0 16px #fff,0 0 46px #FFD24D,0 0 90px #FF9EC4;
+  animation:dwShine 1.5s ease-in-out infinite;
+}
+@keyframes dwShine{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+.dw-front .buddy{width:132px;height:138px}
+
+.dw-msg{
+  z-index:2;margin-top:22px;text-align:center;color:#fff;opacity:0;transform:translateY(10px);
+  text-shadow:0 2px 10px rgba(0,0,0,.55);font-family:var(--f-disp);transition:.4s ease;
+}
+.dw-msg.on{opacity:1;transform:none}
+.dw-msg .st{font-size:19px;color:#FFD98A;letter-spacing:2px}
+.dw-msg .nm{font-size:26px;font-weight:800;margin:2px 0 4px}
+.dw-msg .sub{font-size:13px;opacity:.9;font-family:var(--f-body)}
+.dw-msg .tap{font-size:11px;opacity:.6;margin-top:14px;font-family:var(--f-body)}
+
+/* 舞う粒。★3で花びら、★4で紙吹雪 */
+.dw-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+.dw-p{position:absolute;top:-8%;border-radius:2px;animation:dwFall linear forwards}
+@keyframes dwFall{
+  0%{transform:translateY(0) rotate(0);opacity:1}
+  100%{transform:translateY(112vh) rotate(720deg);opacity:.15}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .dw-rays{animation:none}
+  .dw-card.wait{animation:none}
+  .dw-p{display:none}
+}
+
 /* ================= サウナ図鑑 ================= */
 .fr{position:relative;cursor:pointer}
 .fr.lock{cursor:default}
@@ -901,6 +988,19 @@ nav button.on .icon{stroke-width:2.3}
     <span style="width:38px;flex:none"></span>
   </div>
   <div class="sbody" id="pf-body"></div>
+</div>
+
+<!-- ============ カードを引く演出 ============ -->
+<div id="draw" aria-hidden="true">
+  <div class="dw-rays" id="dw-rays"></div>
+  <div class="dw-stage">
+    <div class="dw-card" id="dw-card">
+      <div class="dw-face dw-back"><span>🎴</span></div>
+      <div class="dw-face dw-front" id="dw-front"></div>
+    </div>
+  </div>
+  <div class="dw-msg" id="dw-msg"></div>
+  <div class="dw-fx" id="dw-fx"></div>
 </div>
 
 <!-- ============ はじめての人への案内 ============ -->
@@ -3014,17 +3114,81 @@ function ticketBurst(n) {
   clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2400);
 }
 
-/* 引いたアバターを大きく見せる。★が多いほど派手にする */
+/* ============ カードを引く演出 ============
+   裏向きのカードが出る → ためる → めくれる → アバター登場。
+   ★が多いほど「ためる時間」が長く、光と粒が派手になる。
+   ためが長いこと自体が「何か来るぞ」という合図になる。 */
+const DRAW_FX = {
+  1: { wait: 480,  dim: "dim",  colors: [] },
+  2: { wait: 760,  dim: "dim",  colors: ["#FFD9E7", "#FFE6EE"] },
+  3: { wait: 1200, dim: "dim",  colors: ["#FFD98A", "#FFE9B8", "#FFF3D6"] },
+  4: { wait: 1750, dim: "dim2", colors: ["#FF9EC4", "#FFD24D", "#9BE7A6", "#8FD4F5", "#C6A9F0"] },
+};
+
+let drawTimers = [];
+function clearDrawTimers() { drawTimers.forEach(clearTimeout); drawTimers = []; }
+const after = (ms, fn) => drawTimers.push(setTimeout(fn, ms));
+
+function sprinkle(colors, count) {
+  const fx = $("dw-fx");
+  if (!colors.length || window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  let html = "";
+  for (let i = 0; i < count; i++) {
+    const c = colors[i % colors.length];
+    const w = 6 + Math.random() * 7;
+    html += `<i class="dw-p" style="left:${Math.random() * 100}%;width:${w}px;height:${w * (0.5 + Math.random())}px;background:${c};animation-duration:${2 + Math.random() * 2.2}s;animation-delay:${Math.random() * 0.9}s"></i>`;
+  }
+  fx.innerHTML = html;
+}
+
+function closeDraw() {
+  clearDrawTimers();
+  const d = $("draw");
+  d.className = "";
+  $("dw-fx").innerHTML = "";
+  $("dw-msg").classList.remove("on");
+  document.body.style.overflow = "";
+}
+
 function cardBurst(bud, isNew) {
-  const b = $("burst");
-  $("burst-mark").innerHTML =
-    `<div class="cardhit r${bud.rare}">${buddySvg(bud, "big")}</div>`;
-  const n = (profile.buddyCount || {})[bud.id] || 1;
-  $("burst-msg").innerHTML =
-    `${"★".repeat(bud.rare)}<br><b>${esc(bud.nm)}</b><br>` +
-    (isNew ? "図鑑に加わった！" : `また会えた（${n}回目）`);
-  b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
-  clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2800);
+  clearDrawTimers();
+  const fx = DRAW_FX[bud.rare] || DRAW_FX[1];
+  const d = $("draw"), card = $("dw-card");
+
+  d.className = "on r" + bud.rare;
+  document.body.style.overflow = "hidden";
+  $("dw-fx").innerHTML = "";
+  $("dw-msg").classList.remove("on");
+  $("dw-front").innerHTML = `${buddySvg(bud, "big")}`;
+
+  card.className = "dw-card";
+  void card.offsetWidth;
+  card.classList.add("in");
+
+  after(30, () => d.classList.add(fx.dim));
+
+  /* ためる。★が多いほど長く、期待が高まる */
+  after(500, () => { card.classList.remove("in"); card.classList.add("wait"); });
+
+  after(500 + fx.wait, () => {
+    card.classList.remove("wait");
+    card.classList.add("flip");
+  });
+
+  /* めくれ終わってから、名前と粒を出す */
+  after(500 + fx.wait + 480, () => {
+    const n = (profile.buddyCount || {})[bud.id] || 1;
+    $("dw-msg").innerHTML =
+      `<div class="st">${"★".repeat(bud.rare)}</div>
+       <div class="nm">${esc(bud.nm)}</div>
+       <div class="sub">${isNew ? "図鑑に加わった！" : `また会えた（${n}回目）`}</div>
+       <div class="tap">タップで閉じる</div>`;
+    $("dw-msg").classList.add("on");
+    sprinkle(fx.colors, bud.rare === 4 ? 46 : bud.rare === 3 ? 24 : 12);
+  });
+
+  /* 放っておいても閉じる。★4はゆっくり眺められるよう長め */
+  after(500 + fx.wait + 480 + (bud.rare === 4 ? 4200 : 2600), closeDraw);
 }
 
 /* もらったアイテムを大きく見せる */
@@ -3114,6 +3278,9 @@ async function importJSON(file) {
 document.addEventListener("click", async ev => {
   const t = ev.target;
   const hit = sel => t.closest(sel);
+
+  /* カードの演出は、どこを触っても閉じられるようにする */
+  if (hit("#draw")) { closeDraw(); return; }
 
   const nav = hit("nav button");
   if (nav) { gotoTab(nav.dataset.tab); return; }
