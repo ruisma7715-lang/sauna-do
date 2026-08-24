@@ -69,6 +69,8 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 .fr.lock{cursor:default}
 .fr .rr{display:block;font-style:normal;font-size:10px;color:var(--hinoki);letter-spacing:-1px;line-height:1.2}
 .fr .dup{font-size:10px;color:var(--sub);letter-spacing:0;margin-left:3px;font-weight:800}
+.frhint{font-size:11.5px;color:var(--sub);margin:-6px 0 8px}
+.selfic{font-size:30px;line-height:1.5;text-align:center}
 .fr.lock .rr{color:var(--dim)}
 .fr.on{background:var(--sakura-lt);border-radius:14px;box-shadow:inset 0 0 0 2px var(--sakura)}
 .fr .cur{
@@ -732,6 +734,7 @@ nav button.on .icon{stroke-width:2.3}
     <div id="ticket"></div>
 
     <div class="sec">サウナ図鑑<span class="cnt" id="fr-count"></span></div>
+    <p class="frhint">タップすると、その子がアバターになります</p>
     <div class="friends" id="friends"></div>
 
     <div class="sec">もちもの<span class="cnt" id="item-count"></span></div>
@@ -1485,11 +1488,11 @@ const buddySvg = (b, cls) => `
 /* 集めたアバターと、いま連れているアバター */
 const ownedBuddies = () => (profile.buddies || []);
 const gotBuddy = id => ownedBuddies().indexOf(id) >= 0;
+/* いまアバターにしている子。null なら「じぶん（人のすがた）」 */
 function activeBuddy() {
   const id = profile.buddy;
-  if (id && gotBuddy(id)) return BUDDY_BY_ID[id];
-  const first = ownedBuddies()[0];
-  return first ? BUDDY_BY_ID[first] : null;
+  if (!id || id === "self") return null;
+  return gotBuddy(id) ? BUDDY_BY_ID[id] : null;
 }
 
 let totonoiUntil = 0;
@@ -1728,7 +1731,10 @@ function avatarSvg(opt) {
       <rect width="260" height="260" fill="url(#avbg)"/>
       ${bg ? bg.svg : sky.deco}
       ${seat ? seat.svg : ""}
-      <g class="chara">
+      ${bud
+        /* 集めた子をアバターにしている場合。飾りは人の体に合わせて描いてあるので着せない */
+        ? `<g class="chara"><g transform="translate(45,62) scale(1.1)">${bud.body}</g></g>`
+        : `<g class="chara">
         ${back ? back.svg : ""}
         ${bottoms ? bottoms.svg : AV_LEGS}
         ${shoes ? shoes.svg : AV_FEET}
@@ -1741,8 +1747,7 @@ function avatarSvg(opt) {
           ${face ? face.svg : ""}
         </g>
         <g class="armR">${hand ? hand.svg : ""}</g>
-      </g>
-      ${mates}
+      </g>`}
       ${mode === "sad" ? "" : `<g class="avsteam">
         <circle class="s1" cx="80" cy="26" r="5" fill="#ffffff"/>
         <circle class="s2" cx="100" cy="20" r="6.5" fill="#ffffff"/>
@@ -2064,10 +2069,8 @@ async function drawGacha() {
   if (!profile.buddyCount) profile.buddyCount = {};
   profile.buddyCount[hit.id] = (profile.buddyCount[hit.id] || 0) + 1;
 
-  if (isNew) {
-    profile.buddies = ownedBuddies().concat([hit.id]);
-    if (!profile.buddy) profile.buddy = hit.id;     // 最初の1体は自動で相棒に
-  }
+  /* アバターは勝手に変えない。切り替えは図鑑からご本人に選んでもらう */
+  if (isNew) profile.buddies = ownedBuddies().concat([hit.id]);
   await saveProfile();
   renderHome();
   cardBurst(hit, isNew);
@@ -2079,7 +2082,16 @@ function renderFriends() {
   $("fr-count").textContent = `　${got} / ${BUDDIES.length}`;
   const cur = activeBuddy();
   const cnt = profile.buddyCount || {};
-  $("friends").innerHTML = BUDDIES.map(b => {
+
+  /* 先頭は「じぶん」。ここに戻せば、もとの人のすがたになる */
+  const selfTile = `<div class="fr ${cur ? "" : "on"}" data-setbuddy="self">
+      <div class="selfic">🧖</div>
+      <span>じぶん</span>
+      <em class="rr">きほん</em>
+      ${cur ? "" : '<i class="cur">これ</i>'}
+    </div>`;
+
+  $("friends").innerHTML = selfTile + BUDDIES.map(b => {
     const ok = gotBuddy(b.id);
     const on = cur && cur.id === b.id;
     const n = cnt[b.id] || 0;
@@ -2087,7 +2099,7 @@ function renderFriends() {
       ${ok ? buddySvg(b, "sm") : '<div class="frlock">？</div>'}
       <span>${ok ? esc(b.nm) : "？？？"}</span>
       <em class="rr">${"★".repeat(b.rare)}${n > 1 ? `<b class="dup">×${n}</b>` : ""}</em>
-      ${on ? '<i class="cur">いっしょ</i>' : ""}
+      ${on ? '<i class="cur">これ</i>' : ""}
     </div>`;
   }).join("");
 }
@@ -3112,7 +3124,8 @@ document.addEventListener("click", async ev => {
     profile.buddy = budPick.dataset.setbuddy;
     await saveProfile();
     renderHome();
-    toast(`${BUDDY_BY_ID[profile.buddy].nm} といっしょに行きます`);
+    const b = BUDDY_BY_ID[profile.buddy];
+    toast(b ? `${b.nm} のすがたになりました` : "じぶんのすがたに戻りました");
     return;
   }
 
