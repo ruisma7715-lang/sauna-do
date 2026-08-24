@@ -64,6 +64,25 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 }
 .icon{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
+/* ================= サウナ図鑑 ================= */
+.fr{position:relative;cursor:pointer}
+.fr.lock{cursor:default}
+.fr .rr{display:block;font-style:normal;font-size:10px;color:var(--hinoki);letter-spacing:-1px;line-height:1.2}
+.fr.lock .rr{color:var(--dim)}
+.fr.on{background:var(--sakura-lt);border-radius:14px;box-shadow:inset 0 0 0 2px var(--sakura)}
+.fr .cur{
+  position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  background:var(--sakura);color:#fff;font-style:normal;font-size:9.5px;font-weight:800;
+  padding:1px 7px;border-radius:99px;white-space:nowrap;
+}
+.tkcard{font-size:34px;line-height:1;flex:none;filter:drop-shadow(0 2px 4px rgba(214,120,145,.3))}
+.tkcard.big{font-size:60px}
+.cardhit{border-radius:18px;padding:6px}
+.cardhit.r3{background:radial-gradient(circle,#FFF1C9,transparent 70%)}
+.cardhit.r4{background:radial-gradient(circle,#FFE79A,transparent 72%);animation:shine 1.4s ease-in-out infinite}
+@keyframes shine{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+.buddy.big{width:120px;height:125px}
+
 /* ================= SNSシェア ================= */
 .shr-pick{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
 .shr-pick button{
@@ -149,7 +168,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
   30%{opacity:.7}
   100%{opacity:0;transform:translateY(-20px) scale(1.35)}
 }
-/* ---- なかま（アバターの絵の中や一覧で踊る）---- */
+/* ---- 集めたアバター（絵の中や図鑑で踊る）---- */
 .buddy{width:74px;height:77px}
 .bd{transform-box:fill-box;transform-origin:50% 100%;animation:bd-bob 2.2s ease-in-out infinite}
 .mate.m2 .bd{animation-duration:2.6s;animation-delay:.4s}
@@ -164,7 +183,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 @keyframes bd-glint{0%,72%,100%{opacity:0}80%,88%{opacity:.9}}
 .buddy.sm{position:static;width:58px;height:60px;flex:none}
 .burst .mark .buddy.sm{width:100px;height:104px}
-/* ---- ワタル君の無料券 ---- */
+/* ---- サウナカード ---- */
 .tk{display:flex;align-items:center;gap:12px;margin-top:12px;padding:14px 16px;
   border-radius:20px;border:2px dashed #E9BE7A;box-shadow:var(--sh);
   background:linear-gradient(150deg,#FFF7E6,#FFEACE)}
@@ -174,7 +193,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 .tk .tkn b{font-size:27px;color:#D08A22;font-variant-numeric:tabular-nums}
 .tk .tkd{font-size:11px;color:var(--sub);margin-top:2px}
 .tk .tkd b{color:#B27C29;font-size:13px}
-/* ---- サ活レベル・なかま・保存 ---- */
+/* ---- サ活レベル・図鑑・保存 ---- */
 .lvl{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:10px}
 .lvl .lvt{font-family:var(--f-disp);font-size:16px;font-weight:800;color:var(--sakura-d);
   background:var(--sakura-lt);border-radius:99px;padding:4px 16px}
@@ -709,10 +728,10 @@ nav button.on .icon{stroke-width:2.3}
       <button class="btn mizu avsave" id="av-save">アバターを画像で保存</button>
     </div>
 
-    <div class="sec">なかま<span class="cnt" id="fr-count"></span></div>
-    <div class="friends" id="friends"></div>
-
     <div id="ticket"></div>
+
+    <div class="sec">サウナ図鑑<span class="cnt" id="fr-count"></span></div>
+    <div class="friends" id="friends"></div>
 
     <div class="sec">もちもの<span class="cnt" id="item-count"></span></div>
     <div class="items" id="items"></div>
@@ -1307,15 +1326,169 @@ function levelOf(vis) {
   return { cur, next };
 }
 
-/* 県を制覇するほど なかまが増える */
-/* need は「行った施設の数」 */
-const FRIENDS = [
-  { id:"hiro",   need:10, nm:"ヒロちゃん", hair:"#3A2A22", shirt:"#E5738F", skin:"#FBD9C0" },
-  { id:"miyo",   need:15, nm:"みよちゃん", hair:"#6B4A2E", shirt:"#4FA3C7", skin:"#F7D4B8" },
-  { id:"yuka",   need:20, nm:"ゆかちゃん", hair:"#8A6A44", shirt:"#E9A94F", skin:"#FCE0CB" },
-  { id:"wataru", need:30, nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" }
+/* ============ サウナ図鑑（カードを引いて集めるアバター）============
+   絵はすべて viewBox 0 0 100 104 の中に描く。
+   まばたきさせたい目には class="eyeb" を付けること（共通アニメが効く）。
+   rare は 1〜4 で、数字が大きいほど出にくい。 */
+const BUDDIES = [
+  /* ---- ★1 よく出る ---- */
+  { id:"hiyoko", nm:"ひよこ", rare:1, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#F6C544"/>
+    <ellipse cx="50" cy="54" rx="24" ry="23" fill="#FFD95E"/>
+    <path d="M44 34q6-9 12 0z" fill="#FFE896"/>
+    <circle class="eyeb" cx="41" cy="52" r="3.6" fill="#3A2A12"/>
+    <circle class="eyeb" cx="59" cy="52" r="3.6" fill="#3A2A12"/>
+    <path d="M50 60l-6 5h12z" fill="#F0932B"/>
+    <ellipse cx="33" cy="60" rx="5" ry="7" fill="#F6C544"/>` },
+
+  { id:"kaeru", nm:"かえる", rare:1, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#5FAE63"/>
+    <ellipse cx="50" cy="58" rx="25" ry="20" fill="#79C77C"/>
+    <circle cx="36" cy="40" r="10" fill="#79C77C"/>
+    <circle cx="64" cy="40" r="10" fill="#79C77C"/>
+    <circle class="eyeb" cx="36" cy="40" r="4.4" fill="#22351F"/>
+    <circle class="eyeb" cx="64" cy="40" r="4.4" fill="#22351F"/>
+    <path d="M38 62q12 8 24 0" fill="none" stroke="#33632F" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="34" cy="58" r="3.6" fill="#F3A0A8" opacity=".55"/>
+    <circle cx="66" cy="58" r="3.6" fill="#F3A0A8" opacity=".55"/>` },
+
+  { id:"neko", nm:"ねこ", rare:1, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#F0E4D8"/>
+    <path d="M30 40l-2-16 15 9zM70 40l2-16-15 9z" fill="#F7EFE6"/>
+    <path d="M31 37l-1-9 8 5zM69 37l1-9-8 5z" fill="#F0B8C0"/>
+    <ellipse cx="50" cy="55" rx="24" ry="22" fill="#F7EFE6"/>
+    <circle class="eyeb" cx="41" cy="53" r="3.8" fill="#3B2A22"/>
+    <circle class="eyeb" cx="59" cy="53" r="3.8" fill="#3B2A22"/>
+    <path d="M47 61q3 3 6 0" fill="none" stroke="#C58C7C" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M24 56h-8M24 61h-8M76 56h8M76 61h8" stroke="#D9C6B6" stroke-width="1.8" stroke-linecap="round"/>` },
+
+  /* ---- ★2 ふつう ---- */
+  { id:"tanuki", nm:"たぬき", rare:2, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#8A6A50"/>
+    <circle cx="31" cy="37" r="9" fill="#9A7A5E"/>
+    <circle cx="69" cy="37" r="9" fill="#9A7A5E"/>
+    <ellipse cx="50" cy="55" rx="24" ry="22" fill="#A98867"/>
+    <ellipse cx="41" cy="53" rx="8" ry="7" fill="#5B4636"/>
+    <ellipse cx="59" cy="53" rx="8" ry="7" fill="#5B4636"/>
+    <circle class="eyeb" cx="41" cy="53" r="3.4" fill="#FFF6E9"/>
+    <circle class="eyeb" cx="59" cy="53" r="3.4" fill="#FFF6E9"/>
+    <ellipse cx="50" cy="63" rx="5" ry="4" fill="#F3E4D2"/>
+    <ellipse cx="50" cy="61" rx="2.6" ry="2" fill="#4A382C"/>` },
+
+  { id:"usagi", nm:"うさぎ", rare:2, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#F3EBEA"/>
+    <ellipse cx="39" cy="26" rx="7" ry="18" fill="#FBF5F4"/>
+    <ellipse cx="61" cy="26" rx="7" ry="18" fill="#FBF5F4"/>
+    <ellipse cx="39" cy="27" rx="3.4" ry="12" fill="#F7C9D4"/>
+    <ellipse cx="61" cy="27" rx="3.4" ry="12" fill="#F7C9D4"/>
+    <ellipse cx="50" cy="58" rx="23" ry="21" fill="#FBF5F4"/>
+    <circle class="eyeb" cx="41" cy="56" r="3.6" fill="#4A3038"/>
+    <circle class="eyeb" cx="59" cy="56" r="3.6" fill="#4A3038"/>
+    <path d="M50 62l-3 3h6z" fill="#EF8FA6"/>
+    <circle cx="33" cy="62" r="3.8" fill="#F7C1CE" opacity=".7"/>
+    <circle cx="67" cy="62" r="3.8" fill="#F7C1CE" opacity=".7"/>` },
+
+  { id:"penguin", nm:"ペンギン", rare:2, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#2E3A45"/>
+    <path d="M35 104c0-10 7-18 15-18s15 8 15 18z" fill="#FBF7F0"/>
+    <ellipse cx="50" cy="54" rx="24" ry="23" fill="#33404C"/>
+    <ellipse cx="50" cy="58" rx="17" ry="17" fill="#FBF7F0"/>
+    <circle class="eyeb" cx="42" cy="52" r="3.4" fill="#21292F"/>
+    <circle class="eyeb" cx="58" cy="52" r="3.4" fill="#21292F"/>
+    <path d="M50 58l-6 5 6 4 6-4z" fill="#F0A22B"/>` },
+
+  /* ---- ★3 レア ---- */
+  { id:"shirokuma", nm:"しろくま", rare:3, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#EFEFF1"/>
+    <circle cx="29" cy="36" r="10" fill="#F8F8FA"/>
+    <circle cx="71" cy="36" r="10" fill="#F8F8FA"/>
+    <circle cx="29" cy="36" r="5" fill="#E7DDDF"/>
+    <circle cx="71" cy="36" r="5" fill="#E7DDDF"/>
+    <ellipse cx="50" cy="56" rx="25" ry="23" fill="#F8F8FA"/>
+    <circle class="eyeb" cx="41" cy="53" r="3.4" fill="#3D3A3C"/>
+    <circle class="eyeb" cx="59" cy="53" r="3.4" fill="#3D3A3C"/>
+    <ellipse cx="50" cy="65" rx="9" ry="7" fill="#EDE6E6"/>
+    <ellipse cx="50" cy="62" rx="3.6" ry="2.8" fill="#3D3A3C"/>
+    <path d="M50 65v3" stroke="#3D3A3C" stroke-width="1.8" stroke-linecap="round"/>` },
+
+  { id:"azarashi", nm:"あざらし", rare:3, body:`
+    <path d="M24 104c0-15 12-26 26-26s26 11 26 26z" fill="#BFC9D2"/>
+    <ellipse cx="50" cy="55" rx="26" ry="23" fill="#D3DCE4"/>
+    <circle class="eyeb" cx="40" cy="52" r="4.2" fill="#39434C"/>
+    <circle class="eyeb" cx="60" cy="52" r="4.2" fill="#39434C"/>
+    <ellipse cx="50" cy="64" rx="10" ry="7" fill="#EAF0F5"/>
+    <ellipse cx="50" cy="61" rx="3" ry="2.4" fill="#5A6570"/>
+    <path d="M40 66q10 6 20 0" fill="none" stroke="#8F9BA6" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M26 58h-8M26 63h-8M74 58h8M74 63h8" stroke="#AFBAC4" stroke-width="1.8" stroke-linecap="round"/>` },
+
+  { id:"panda", nm:"パンダ", rare:3, body:`
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#F6F4F1"/>
+    <circle cx="29" cy="35" r="10" fill="#2C2B2A"/>
+    <circle cx="71" cy="35" r="10" fill="#2C2B2A"/>
+    <ellipse cx="50" cy="56" rx="25" ry="23" fill="#FBFAF8"/>
+    <ellipse cx="40" cy="53" rx="9" ry="10" fill="#2C2B2A" transform="rotate(-14 40 53)"/>
+    <ellipse cx="60" cy="53" rx="9" ry="10" fill="#2C2B2A" transform="rotate(14 60 53)"/>
+    <circle class="eyeb" cx="40" cy="53" r="3.4" fill="#FBFAF8"/>
+    <circle class="eyeb" cx="60" cy="53" r="3.4" fill="#FBFAF8"/>
+    <ellipse cx="50" cy="65" rx="4.4" ry="3.4" fill="#2C2B2A"/>
+    <path d="M43 71q7 5 14 0" fill="none" stroke="#2C2B2A" stroke-width="2.2" stroke-linecap="round"/>` },
+
+  /* ---- ★4 超レア ---- */
+  { id:"capybara", nm:"カピバラ", rare:4, body:`
+    <path d="M26 104c0-14 11-25 24-25s24 11 24 25z" fill="#9A7250"/>
+    <circle cx="31" cy="39" r="6" fill="#7E5C3F"/>
+    <circle cx="69" cy="39" r="6" fill="#7E5C3F"/>
+    <path d="M25 56c0-13 11-22 25-22s25 9 25 22v6c0 9-11 15-25 15s-25-6-25-15z" fill="#B08A64"/>
+    <path d="M36 54q5 4 10 0M54 54q5 4 10 0" fill="none" stroke="#3E2E20" stroke-width="3.2" stroke-linecap="round"/>
+    <ellipse cx="50" cy="70" rx="13" ry="9" fill="#C39B72"/>
+    <ellipse cx="45" cy="68" rx="2.2" ry="1.6" fill="#3E2E20"/>
+    <ellipse cx="55" cy="68" rx="2.2" ry="1.6" fill="#3E2E20"/>
+    <path d="M44 74q6 4 12 0" fill="none" stroke="#3E2E20" stroke-width="2.4" stroke-linecap="round"/>
+    <ellipse cx="20" cy="72" rx="5" ry="3.4" fill="#F5C86B" opacity=".85"/>
+    <ellipse cx="80" cy="72" rx="5" ry="3.4" fill="#F5C86B" opacity=".85"/>` },
+
+  { id:"kincapy", nm:"金のカピバラ", rare:4, body:`
+    <path d="M26 104c0-14 11-25 24-25s24 11 24 25z" fill="#D9A63C"/>
+    <circle cx="31" cy="39" r="6" fill="#BE8A28"/>
+    <circle cx="69" cy="39" r="6" fill="#BE8A28"/>
+    <path d="M25 56c0-13 11-22 25-22s25 9 25 22v6c0 9-11 15-25 15s-25-6-25-15z" fill="#EFCB6A"/>
+    <path d="M36 54q5 4 10 0M54 54q5 4 10 0" fill="none" stroke="#6B4E12" stroke-width="3.2" stroke-linecap="round"/>
+    <ellipse cx="50" cy="70" rx="13" ry="9" fill="#FBE0A0"/>
+    <ellipse cx="45" cy="68" rx="2.2" ry="1.6" fill="#6B4E12"/>
+    <ellipse cx="55" cy="68" rx="2.2" ry="1.6" fill="#6B4E12"/>
+    <path d="M44 74q6 4 12 0" fill="none" stroke="#6B4E12" stroke-width="2.4" stroke-linecap="round"/>
+    <g fill="#FFF6D6"><path d="M16 30l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/><path d="M84 24l2.4 5.6 5.6 2.4-5.6 2.4L84 40l-2.4-5.6L76 32l5.6-2.4z"/></g>` },
+
+  { id:"sagami", nm:"サ神さま", rare:4, body:`
+    <ellipse cx="50" cy="18" rx="17" ry="5" fill="none" stroke="#F5D97A" stroke-width="3.4"/>
+    <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#EDE6F5"/>
+    <ellipse cx="50" cy="55" rx="24" ry="23" fill="#FBF8FF"/>
+    <path d="M26 50a24 24 0 0 1 48 0q-8-14-24-14T26 50z" fill="#D9CBEE"/>
+    <circle class="eyeb" cx="41" cy="54" r="3.6" fill="#4A3E66"/>
+    <circle class="eyeb" cx="59" cy="54" r="3.6" fill="#4A3E66"/>
+    <path d="M43 63q7 6 14 0" fill="none" stroke="#8A7BAA" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M28 70q-14-8-20 2 10 10 22 4zM72 70q14-8 20 2-10 10-22 4z" fill="#FFFDF6" stroke="#F0E2B8" stroke-width="2.4" stroke-linejoin="round"/>` },
 ];
-const WATARU_F = FRIENDS.find(f => f.id === "wataru");
+
+const BUDDY_BY_ID = Object.fromEntries(BUDDIES.map(b => [b.id, b]));
+
+/* 引いたときの当たりやすさ。★が多いほど出にくい */
+const RARE_WEIGHT = { 1: 44, 2: 30, 3: 20, 4: 6 };
+
+const buddySvg = (b, cls) => `
+  <svg class="buddy ${cls || ""}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 104" role="img" aria-label="${esc(b ? b.nm : "アバター")}">
+    <g class="bd">${b ? b.body : ""}</g>
+  </svg>`;
+
+/* 集めたアバターと、いま連れているアバター */
+const ownedBuddies = () => (profile.buddies || []);
+const gotBuddy = id => ownedBuddies().indexOf(id) >= 0;
+function activeBuddy() {
+  const id = profile.buddy;
+  if (id && gotBuddy(id)) return BUDDY_BY_ID[id];
+  const first = ownedBuddies()[0];
+  return first ? BUDDY_BY_ID[first] : null;
+}
 
 let totonoiUntil = 0;
 function setTotonoi() {
@@ -1427,32 +1600,10 @@ const ITEMS = [
     <circle cx="100" cy="20" r="4.2" fill="#EF6E96"/>` }
 ];
 
-/* 相棒のワタル君。5回ととのうごとに無料券をくれる */
-const TICKET_STEP = 5;
-const wataru = (cls, f) => `
-  <svg class="buddy ${cls || ""}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 104" role="img" aria-label="${esc((f && f.nm) || "ワタル君")}">
-    ${wataruBody(f)}
-  </svg>`;
+/* サウナに5回行くごとに、カードが1枚引ける */
+const DRAW_STEP = 5;
 
-const wataruBody = f => `
-    <g class="bd">
-      <path d="M22 52c0-17 12-30 28-30s28 13 28 30v18c0 5-3 8-8 8H30c-5 0-8-3-8-8z" fill="${(f && f.hair) || "#241C1A"}"/>
-      <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="${(f && f.shirt) || "#1E1E22"}"/>
-      <ellipse cx="50" cy="53" rx="23" ry="24" fill="${(f && f.skin) || "#F7D4B8"}"/>
-      <path d="M44 65q6 9 12 0z" fill="#7C3542"/>
-      <ellipse class="tongue" cx="50" cy="68" rx="4.6" ry="3.4" fill="#E9697F"/>
-      <path d="M26 52a24 24 0 0 1 48 0q-6-12-12-9-6 2-12 2t-12-2q-6-3-12 9z" fill="${(f && f.hair) || "#241C1A"}"/>
-      <path d="M47 50h6" fill="none" stroke="#15100F" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="38" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
-      <circle cx="62" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
-      <circle class="eyeb" cx="38" cy="47" r="3.3" fill="#241710"/>
-      <circle class="eyeb" cx="62" cy="47" r="3.3" fill="#241710"/>
-      <g class="glint" fill="#ffffff" opacity="0">
-        <path d="M31 45l6-5 3 4-6 5z"/><path d="M55 45l6-5 3 4-6 5z"/>
-      </g>
-    </g>`;
-
-/* サウナくじ でしか出ない レアアイテム */
+/* もとは くじ限定だった飾り。いまは通いつづければ手に入る */
 const RARE = [
   { id:"goldhat", rare:1, nm:"金のサウナハット", slot:"head", vb:"54 6 92 54", svg:`
     <path d="M68 48c0-20 14-35 32-35s32 15 32 35z" fill="#F2C14E"/>
@@ -1482,25 +1633,22 @@ const RARE = [
     <path d="M40 116q22 18 34 40M160 116q-22 18-34 40" fill="none" stroke="#EFD79A" stroke-width="2.4"/>` }
 ];
 const ALL_ITEMS = ITEMS.concat(RARE);
+/* 飾りは通った数だけ順に開く。くじ限定のものは無くした */
 function hasItem(it) {
-  return it.rare ? (profile.rare || []).indexOf(it.id) >= 0 : ITEMS.indexOf(it) < ownedCount();
+  return ALL_ITEMS.indexOf(it) < ownedCount();
 }
 
-/* アバターの絵の中で なかまが立つ位置（手前2人・奥2人） */
-const FR_SLOT = [
-  { x:150, y:158, s:.60, z:2 },
-  { x:198, y:166, s:.58, z:2 },
-  { x:158, y:104, s:.47, z:1 },
-  { x:206, y:112, s:.47, z:1 }
-];
+/* アバターの絵の中で、連れているアバターが立つ位置 */
+const FR_SLOT = [{ x:174, y:160, s:.62, z:2 }];
 
 const PROFILE_ID = "__profile__";
-let profile = { id: PROFILE_ID, equip: {}, usedTickets: 0 };
+let profile = { id: PROFILE_ID, equip: {}, usedTickets: 0, buddies: [], buddy: "" };
 
-function ticketsEarned() { return Math.floor(summary().vis / TICKET_STEP) + (profile.bonus || 0); }
-function ticketsLeft() { return Math.max(0, ticketsEarned() - (profile.usedTickets || 0)); }
+/* 引ける回数。5回行くごとに1枚たまり、引くと減る */
+function drawsEarned() { return Math.floor(summary().vis / DRAW_STEP) + (profile.bonus || 0); }
+function drawsLeft() { return Math.max(0, drawsEarned() - (profile.usedTickets || 0)); }
 
-/* --- 今週のミッション（達成すると無料券がもう1枚） --- */
+/* --- 今週のミッション（達成するとカードがもう1枚） --- */
 const MISSION_NEED = 2;
 function weekKey(d) {
   const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -1543,13 +1691,13 @@ function avatarSvg(opt) {
   const bg = of("bg"), seat = of("seat"), back = of("back"), tops = of("tops"),
         bottoms = of("bottoms"), shoes = of("shoes"), neck = of("neck"),
         head = of("head"), face = of("face"), hand = of("hand");
-  const mates = FRIENDS
-    .map((f, i) => ({ f, s: FR_SLOT[i] }))
-    .filter(x => x.s && summary().fac >= x.f.need)
-    .sort((a, b) => a.s.z - b.s.z)
-    .map((x, k) => `<g class="mate m${k + 1}" transform="translate(${x.s.x},${x.s.y}) scale(${x.s.s})">${wataruBody(x.f)}</g>`)
-    .join("");
-  return `<svg class="av" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" role="img" aria-label="あなたのサウナアバターと なかま">
+  /* 連れているアバターを1体だけ隣に立たせる */
+  const bud = activeBuddy();
+  const sl = FR_SLOT[0];
+  const mates = bud
+    ? `<g class="mate m1" transform="translate(${sl.x},${sl.y}) scale(${sl.s})">${bud.body}</g>`
+    : "";
+  return `<svg class="av" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" role="img" aria-label="あなたのサウナアバター${bud ? "と" + esc(bud.nm) : ""}">
     <defs>
       <linearGradient id="avbg" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${sky.top}"/><stop offset="100%" stop-color="${sky.bot}"/>
@@ -1866,19 +2014,19 @@ function cardHtml(f) {
 }
 
 function renderTickets() {
-  const left = ticketsLeft(), vis = summary().vis;
-  const rest = TICKET_STEP - (vis % TICKET_STEP);
-  const rare = (profile.rare || []).length;
+  const left = drawsLeft(), vis = summary().vis;
+  const rest = DRAW_STEP - (vis % DRAW_STEP);
+  const got = ownedBuddies().length;
   const ms = missionState();
   $("ticket").innerHTML = `
     <div class="tk">
-      ${wataru("sm", WATARU_F)}
+      <div class="tkcard">🎴</div>
       <div class="tkb">
-        <div class="tkt">ワタル君の無料券</div>
+        <div class="tkt">サウナカード</div>
         <div class="tkn"><b>${left}</b> 枚</div>
-        <div class="tkd">あと <b>${rest}</b> 回ととのうと もう1枚／レア ${rare} / ${RARE.length}</div>
+        <div class="tkd">あと <b>${rest}</b> 回ととのうと もう1枚／図鑑 ${got} / ${BUDDIES.length}</div>
       </div>
-      ${left ? '<button class="btn pri" data-usetk="1">くじを引く</button>' : ""}
+      ${left ? '<button class="btn pri" data-usetk="1">カードを引く</button>' : ""}
     </div>
     <div class="ms">
       <div class="msb">
@@ -1890,31 +2038,48 @@ function renderTickets() {
     </div>`;
 }
 
-/* サウナくじ。無料券1枚で レアアイテムが1個 当たる */
-async function drawGacha() {
-  if (!ticketsLeft()) return;
-  const pool = RARE.filter(r => (profile.rare || []).indexOf(r.id) < 0);
-  if (!pool.length) { toast("レアアイテムは ぜんぶ出ました"); return; }
-  if (!confirm("無料券を1枚つかって サウナくじを引きますか？")) return;
-  const hit = pool[Math.floor(Math.random() * pool.length)];
-  profile.usedTickets = (profile.usedTickets || 0) + 1;
-  profile.rare = (profile.rare || []).concat([hit.id]);
-  profile.equip[hit.slot] = hit.id;
-  await saveProfile();
-  renderHome();
-  itemBurst(hit);
-  setTimeout(() => toast(`レア「${hit.nm}」を身につけました`), 900);
+/* カードを1枚引く。★が多いほど出にくい。
+   まだ持っていないアバターを優先し、全部そろったら重複も出す。 */
+function pickBuddy() {
+  const yet = BUDDIES.filter(b => !gotBuddy(b.id));
+  const pool = yet.length ? yet : BUDDIES;
+  const total = pool.reduce((s, b) => s + (RARE_WEIGHT[b.rare] || 1), 0);
+  let r = Math.random() * total;
+  for (const b of pool) {
+    r -= (RARE_WEIGHT[b.rare] || 1);
+    if (r <= 0) return b;
+  }
+  return pool[pool.length - 1];
 }
 
+async function drawGacha() {
+  if (!drawsLeft()) return;
+  const hit = pickBuddy();
+  const isNew = !gotBuddy(hit.id);
+
+  profile.usedTickets = (profile.usedTickets || 0) + 1;
+  if (isNew) {
+    profile.buddies = ownedBuddies().concat([hit.id]);
+    if (!profile.buddy) profile.buddy = hit.id;     // 最初の1体は自動で相棒に
+  }
+  await saveProfile();
+  renderHome();
+  cardBurst(hit, isNew);
+}
+
+/* 図鑑。まだ出ていないアバターは影で見せて、集めたくなるようにする */
 function renderFriends() {
-  const n = summary().fac;                    // 行った施設の数
-  const got = FRIENDS.filter(f => n >= f.need).length;
-  $("fr-count").textContent = `　${got} / ${FRIENDS.length}`;
-  $("friends").innerHTML = FRIENDS.map(f => {
-    const ok = n >= f.need;
-    return `<div class="fr ${ok ? "" : "lock"}">
-      ${ok ? wataru("sm", f) : '<div class="frlock">？</div>'}
-      <span>${ok ? esc(f.nm) : "あと" + (f.need - n) + "軒"}</span>
+  const got = ownedBuddies().length;
+  $("fr-count").textContent = `　${got} / ${BUDDIES.length}`;
+  const cur = activeBuddy();
+  $("friends").innerHTML = BUDDIES.map(b => {
+    const ok = gotBuddy(b.id);
+    const on = cur && cur.id === b.id;
+    return `<div class="fr ${ok ? "" : "lock"} ${on ? "on" : ""}" ${ok ? `data-setbuddy="${b.id}"` : ""}>
+      ${ok ? buddySvg(b, "sm") : '<div class="frlock">？</div>'}
+      <span>${ok ? esc(b.nm) : "？？？"}</span>
+      <em class="rr">${"★".repeat(b.rare)}</em>
+      ${on ? '<i class="cur">いっしょ</i>' : ""}
     </div>`;
   }).join("");
 }
@@ -2204,7 +2369,7 @@ function renderHome() {
     $("nx-msg").innerHTML = `あと <b class="num">${ITEM_STEP - done}</b> 回のスタンプで つぎのアイテム`;
     $("nx-bar").style.width = (done / ITEM_STEP * 100) + "%";
   }
-  $("item-count").textContent = `　${owned}/${ITEMS.length}・レア ${(profile.rare || []).length}/${RARE.length}`;
+  $("item-count").textContent = `　${owned}/${ALL_ITEMS.length}`;
   $("items").innerHTML =
     ITEMS.map((it, i) => {
       if (i >= owned) {
@@ -2800,7 +2965,7 @@ async function addVisit(id, date, memo, extra) {
   const ex2 = extra || {};
   const before = new Set(facilities.filter(x => (x.visits || []).length > 0 && x.prefecture).map(x => x.prefecture));
   const beforeItems = ownedCount();
-  const beforeTk = ticketsEarned();
+  const beforeTk = drawsEarned();
   f.visits = (f.visits || []).concat([{
     id: uid(), date: date || today(), memo: memo || "",
     totonoi: +ex2.totonoi || 0, sets: +ex2.sets || 0, water: ex2.water || ""
@@ -2817,16 +2982,27 @@ async function addVisit(id, date, memo, extra) {
     f,
     newPref: !!f.prefecture && !before.has(f.prefecture),
     got,
-    newTickets: ticketsEarned() - beforeTk
+    newTickets: drawsEarned() - beforeTk
   };
 }
 
 function ticketBurst(n) {
   const b = $("burst");
-  $("burst-mark").innerHTML = wataru("sm", WATARU_F);
-  $("burst-msg").innerHTML = `ワタル君から<br>無料券を ${n} 枚もらった！`;
+  $("burst-mark").innerHTML = `<div class="tkcard big">🎴</div>`;
+  $("burst-msg").innerHTML = `サウナカードを<br>${n} 枚もらった！`;
   b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
   clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2400);
+}
+
+/* 引いたアバターを大きく見せる。★が多いほど派手にする */
+function cardBurst(bud, isNew) {
+  const b = $("burst");
+  $("burst-mark").innerHTML =
+    `<div class="cardhit r${bud.rare}">${buddySvg(bud, "big")}</div>`;
+  $("burst-msg").innerHTML =
+    `${"★".repeat(bud.rare)}<br><b>${esc(bud.nm)}</b><br>${isNew ? "図鑑に加わった！" : "もう持っていた…"}`;
+  b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
+  clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2800);
 }
 
 /* もらったアイテムを大きく見せる */
@@ -2898,7 +3074,8 @@ async function importJSON(file) {
     if (data.profile) {
       if (data.profile.equip) profile.equip = data.profile.equip;
       if (typeof data.profile.usedTickets === "number") profile.usedTickets = data.profile.usedTickets;
-      if (Array.isArray(data.profile.rare)) profile.rare = data.profile.rare;
+      if (Array.isArray(data.profile.buddies)) profile.buddies = data.profile.buddies;
+      if (typeof data.profile.buddy === "string") profile.buddy = data.profile.buddy;
       if (data.profile.missions) profile.missions = data.profile.missions;
       if (typeof data.profile.bonus === "number") profile.bonus = data.profile.bonus;
       await saveProfile();
@@ -2917,6 +3094,16 @@ document.addEventListener("click", async ev => {
 
   const nav = hit("nav button");
   if (nav) { gotoTab(nav.dataset.tab); return; }
+
+  /* 図鑑で選んだアバターを連れて歩く */
+  const budPick = hit("[data-setbuddy]");
+  if (budPick) {
+    profile.buddy = budPick.dataset.setbuddy;
+    await saveProfile();
+    renderHome();
+    toast(`${BUDDY_BY_ID[profile.buddy].nm} といっしょに行きます`);
+    return;
+  }
 
   const go = hit("[data-goto]");
   if (go) { gotoTab(go.dataset.goto); return; }
@@ -3270,7 +3457,8 @@ function closeWelcome() {
   profile = rows.find(r => r.id === PROFILE_ID) || { id: PROFILE_ID, equip: {}, usedTickets: 0 };
   if (!profile.equip) profile.equip = {};
   if (typeof profile.usedTickets !== "number") profile.usedTickets = 0;
-  if (!Array.isArray(profile.rare)) profile.rare = [];
+  if (!Array.isArray(profile.buddies)) profile.buddies = [];
+  if (typeof profile.buddy !== "string") profile.buddy = "";
   if (!profile.missions) profile.missions = {};
   if (typeof profile.bonus !== "number") profile.bonus = 0;
   facilities = rows.filter(r => r.id !== PROFILE_ID);
