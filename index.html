@@ -312,7 +312,11 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 .lvl .lvt{font-family:var(--f-disp);font-size:16px;font-weight:800;color:var(--sakura-d);
   background:var(--sakura-lt);border-radius:99px;padding:4px 16px}
 .lvl .lvn{font-size:11px;color:var(--sub);font-weight:700}
-.avsave{margin-top:12px;width:100%}
+.avsave{margin-top:10px;width:100%}
+.avacts{display:flex;gap:8px;margin-top:12px}
+.avacts .btn{flex:1;min-width:0}
+.avnote{font-size:11px;color:var(--sub);font-weight:700;text-align:center;margin:9px 4px 0;line-height:1.55}
+.selfic img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
 .friends{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 @media(min-width:520px){.friends{grid-template-columns:repeat(6,1fr)}}
 .fr{background:var(--card);border-radius:16px;padding:8px 4px 7px;box-shadow:var(--sh);
@@ -995,7 +999,13 @@ nav button.on .icon{stroke-width:2.3}
         <div class="nx" id="nx-msg"></div>
         <div class="track"><i id="nx-bar" style="width:0%"></i></div>
       </div>
+      <div class="avacts">
+        <button class="btn" id="av-photo">写真をつかう</button>
+        <button class="btn" id="av-unphoto">絵に戻す</button>
+      </div>
       <button class="btn mizu avsave" id="av-save">アバターを画像で保存</button>
+      <p class="avnote" id="av-note"></p>
+      <input type="file" id="av-file" accept="image/*" hidden>
     </div>
 
     <div id="ticket"></div>
@@ -2002,6 +2012,7 @@ function avatarSvg(opt) {
         <stop offset="100%" stop-color="#2E1D0F"/>
       </radialGradient>
       <clipPath id="avclip"><rect width="260" height="260" rx="26"/></clipPath>
+      <clipPath id="phclip"><circle cx="130" cy="128" r="88"/></clipPath>
     </defs>
     <g clip-path="url(#avclip)">
       <rect width="260" height="260" fill="url(#avbg)"/>
@@ -2012,6 +2023,16 @@ function avatarSvg(opt) {
            小さく置くと「連れている子」に見えてしまうので、画面いっぱいの主役として大きく描く。
            飾りは人の体に合わせて描いてあるので着せない。 */
         ? `<g class="chara"><g transform="translate(30,26) scale(2)">${bud.body}</g></g>`
+        : profile.photo
+        /* 写真をアバターにしている場合。
+           飾りは描いた体の形に合わせて置いてあるので、写真には重ねない。 */
+        ? `<g class="chara">
+          <circle cx="130" cy="128" r="93" fill="#ffffff" opacity=".5"/>
+          <image href="${profile.photo}" x="42" y="40" width="176" height="176"
+                 preserveAspectRatio="xMidYMid slice" clip-path="url(#phclip)"/>
+          <circle cx="130" cy="128" r="88" fill="none" stroke="#ffffff" stroke-width="7"/>
+          <circle cx="130" cy="128" r="92" fill="none" stroke="#EF6E96" stroke-width="3" opacity=".6"/>
+        </g>`
         : `<g class="chara">
         ${back ? back.svg : ""}
         ${bottoms ? bottoms.svg : AV_LEGS}
@@ -2640,7 +2661,7 @@ function renderFriends() {
 
   /* 先頭は「じぶん」。ここに戻せば、もとの人のすがたになる */
   const selfTile = `<div class="fr ${cur ? "" : "on"}" data-setbuddy="self">
-      <div class="selfic">🧖</div>
+      <div class="selfic">${profile.photo ? `<img src="${profile.photo}" alt="">` : "🧖"}</div>
       <span>じぶん</span>
       <em class="rr">きほん</em>
       ${cur ? "" : '<i class="cur">これ</i>'}
@@ -2791,6 +2812,51 @@ const Share = {
   },
 };
 
+/* えらんだ写真を 正方形に切って 小さくしてから しまう。
+   端末の中に置くだけなので、大きいまま持たずに 360px まで縮める。 */
+async function useAvatarPhoto(file) {
+  if (!file) return;
+  toast("写真を読みこんでいます…");
+  try {
+    let src = null;
+    /* iPhoneの写真は向きの情報を持っているので、それを反映してくれる方をまず使う */
+    if (window.createImageBitmap) {
+      try { src = await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (e) { src = null; }
+    }
+    let url = "";
+    if (!src) {
+      url = URL.createObjectURL(file);
+      src = await new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i);
+        i.onerror = () => rej(new Error("img"));
+        i.src = url;
+      });
+    }
+    const iw = src.width || src.naturalWidth, ih = src.height || src.naturalHeight;
+    if (!iw || !ih) throw new Error("size");
+    const side = Math.min(iw, ih), S = 360;
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = S;
+    cv.getContext("2d").drawImage(src, (iw - side) / 2, (ih - side) / 2, side, side, 0, 0, S, S);
+    if (url) URL.revokeObjectURL(url);
+    if (src.close) src.close();
+    profile.photo = cv.toDataURL("image/jpeg", 0.82);
+    await saveProfile();
+    renderHome();
+    toast("写真をアバターにしました");
+  } catch (e) {
+    toast("この写真は使えませんでした");
+  }
+}
+
+async function clearAvatarPhoto() {
+  profile.photo = "";
+  await saveProfile();
+  renderHome();
+  toast("もとの絵に戻しました");
+}
+
 async function saveAvatarImage() {
   toast("画像を作っています…");
   try {
@@ -2924,6 +2990,11 @@ let nearCity = "";
 
 function renderHome() {
   $("avatar").innerHTML = avatarSvg();
+  $("av-unphoto").style.display = profile.photo ? "" : "none";
+  $("av-photo").textContent = profile.photo ? "写真をえらび直す" : "写真をつかう";
+  $("av-note").textContent = profile.photo
+    ? "写真のときは、もちものの飾りは付きません"
+    : "写真はこの端末の中だけに保存されます。どこにも送られません";
   renderTickets();
   renderFriends();
 
@@ -3808,6 +3879,7 @@ async function importJSON(file) {
       if (Array.isArray(data.profile.buddies)) profile.buddies = data.profile.buddies;
       if (data.profile.buddyCount) profile.buddyCount = data.profile.buddyCount;
       if (typeof data.profile.buddy === "string") profile.buddy = data.profile.buddy;
+      if (typeof data.profile.photo === "string") profile.photo = data.profile.photo;
       if (data.profile.missions) profile.missions = data.profile.missions;
       if (typeof data.profile.bonus === "number") profile.bonus = data.profile.bonus;
       await saveProfile();
@@ -4017,6 +4089,13 @@ document.addEventListener("click", async ev => {
 
 $("fab").onclick = () => openEdit(null, filter.pref);
 $("av-save").onclick = saveAvatarImage;
+$("av-photo").onclick = () => $("av-file").click();
+$("av-unphoto").onclick = clearAvatarPhoto;
+$("av-file").onchange = ev => {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = "";          /* 同じ写真をもう一度えらべるように空にしておく */
+  useAvatarPhoto(f);
+};
 $("sum-save").onclick = saveSummary;
 $("fd-near").onclick = findNearby;
 $("e-save").onclick = saveEdit;
