@@ -690,17 +690,17 @@ nav button.on .icon{stroke-width:2.3}
 .tlmon{display:flex;align-items:baseline;gap:9px;margin:24px 3px 10px}
 .tlmon .mm{font-family:var(--f-disp);font-size:15px;font-weight:800}
 .tlmon .mc{font-size:11.5px;color:var(--sub);font-weight:700}
-.tlmon .ms{margin-left:auto;font-family:var(--f-disp);font-size:13.5px;font-weight:800;color:var(--sakura-d)}
+.tlmon .tlms{margin-left:auto;font-family:var(--f-disp);font-size:13.5px;font-weight:800;color:var(--sakura-d)}
 .tlr{display:flex;align-items:stretch;background:var(--card);border-radius:16px;margin-bottom:8px;
   box-shadow:var(--sh);overflow:hidden}
 .tlr .hit{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:11px 4px 11px 12px;text-align:left}
 .tlr .dt{flex:none;width:46px;text-align:center;border-right:2px solid var(--line);padding-right:9px}
 .tlr .dt b{display:block;font-family:var(--f-disp);font-size:15.5px;font-weight:800;color:var(--sakura-d);line-height:1.15}
 .tlr .dt i{display:block;font-style:normal;font-size:10px;color:var(--sub);font-weight:700}
-.tlr .bd{display:block;flex:1;min-width:0}
+.tlr .tlbd{display:block;flex:1;min-width:0}
 .tlr .nm{display:block;font-family:var(--f-disp);font-size:14.5px;font-weight:800;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tlr .pf{display:block;font-size:11px;color:var(--sub);font-weight:700}
+.tlr .tlpf{display:block;font-size:11px;color:var(--sub);font-weight:700}
 .tlr .mo{display:block;font-size:11.5px;color:var(--mizu-d);font-weight:700;margin-top:2px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tlr .me{display:block;font-size:11.5px;color:var(--sub);margin-top:2px;
@@ -2342,9 +2342,9 @@ function tlRow(v, f) {
   return `<div class="tlr">
     <button class="hit" data-open="${f.id}" aria-label="${esc(f.name)} をひらく">
       <span class="dt"><b>${md}</b><i>${wd}</i></span>
-      <span class="bd">
+      <span class="tlbd">
         <span class="nm">${esc(f.name)}</span>
-        <span class="pf">${esc(f.prefecture || "場所は未登録")}</span>
+        <span class="tlpf">${esc(f.prefecture || "場所は未登録")}</span>
         ${meta ? `<span class="mo">${meta}</span>` : ""}
         ${v.memo ? `<span class="me">${esc(v.memo)}</span>` : ""}
       </span>
@@ -2414,7 +2414,7 @@ function renderLog() {
       html += `<div class="tlmon">
         <span class="mm">${logYear}年${m}月</span>
         <span class="mc">${r.n}回</span>
-        <span class="ms"${r.sum > 0 ? "" : " style=\"color:var(--dim);font-size:11px\""}>${r.sum > 0 ? "¥" + yen(r.sum) : "お金は未入力"}</span></div>`;
+        <span class="tlms"${r.sum > 0 ? "" : " style=\"color:var(--dim);font-size:11px\""}>${r.sum > 0 ? "¥" + yen(r.sum) : "お金は未入力"}</span></div>`;
     }
     html += tlRow(x.v, x.f);
   }
