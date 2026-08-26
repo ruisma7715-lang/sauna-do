@@ -661,6 +661,63 @@ nav button .icon{width:22px;height:22px}
 nav button.on{color:var(--sakura)}
 nav button.on .icon{stroke-width:2.3}
 
+/* ================= りれき・お金 ================= */
+.moneystrip{display:flex;align-items:center;gap:10px;width:100%;margin-top:12px;
+  background:var(--card);border-radius:18px;box-shadow:var(--sh);padding:13px 15px;text-align:left}
+.moneystrip .l{font-family:var(--f-disp);font-size:12.5px;font-weight:800;color:var(--sub);flex:none}
+.moneystrip b{font-family:var(--f-disp);font-size:21px;font-weight:800;color:var(--sakura-d);line-height:1}
+.moneystrip .cu{font-size:13px;margin-right:1px}
+.moneystrip .r{margin-left:auto;font-size:11px;font-weight:700;color:var(--sub);text-align:right;flex:none}
+
+.money{background:var(--card);border-radius:22px;box-shadow:var(--sh);padding:15px 14px 11px}
+.money .yr{display:flex;align-items:center;gap:8px;margin-bottom:13px}
+.money .yr b{font-family:var(--f-disp);font-size:17px;font-weight:800;flex:1;text-align:center}
+.money .yr button{width:34px;height:34px;border-radius:50%;background:var(--sakura-lt);color:var(--sakura-d);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.money .yr button .icon{width:17px;height:17px}
+.money .yr button:disabled{opacity:.28}
+.mtiles{display:flex;gap:8px;margin-bottom:15px}
+.mtile{flex:1;min-width:0;background:var(--ground2);border-radius:15px;padding:10px 5px;text-align:center}
+.mtile.hot{background:var(--sakura-lt)}
+.mtile b{display:block;font-family:var(--f-disp);font-size:17px;font-weight:800;color:var(--sakura-d);line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtile b .cu{font-size:11.5px;margin-right:1px}
+.mtile .k2{display:block;font-size:10.5px;color:var(--sub);font-weight:700;margin-top:3px}
+.mtile .s2{display:block;font-size:10px;color:var(--dim);font-weight:700}
+.money svg{width:100%;height:auto;display:block}
+.money .note2{font-size:11px;color:var(--dim);font-weight:700;margin:9px 2px 0;line-height:1.6}
+
+.tlmon{display:flex;align-items:baseline;gap:9px;margin:24px 3px 10px}
+.tlmon .mm{font-family:var(--f-disp);font-size:15px;font-weight:800}
+.tlmon .mc{font-size:11.5px;color:var(--sub);font-weight:700}
+.tlmon .ms{margin-left:auto;font-family:var(--f-disp);font-size:13.5px;font-weight:800;color:var(--sakura-d)}
+.tlr{display:flex;align-items:stretch;background:var(--card);border-radius:16px;margin-bottom:8px;
+  box-shadow:var(--sh);overflow:hidden}
+.tlr .hit{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:11px 4px 11px 12px;text-align:left}
+.tlr .dt{flex:none;width:46px;text-align:center;border-right:2px solid var(--line);padding-right:9px}
+.tlr .dt b{display:block;font-family:var(--f-disp);font-size:15.5px;font-weight:800;color:var(--sakura-d);line-height:1.15}
+.tlr .dt i{display:block;font-style:normal;font-size:10px;color:var(--sub);font-weight:700}
+.tlr .bd{display:block;flex:1;min-width:0}
+.tlr .nm{display:block;font-family:var(--f-disp);font-size:14.5px;font-weight:800;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlr .pf{display:block;font-size:11px;color:var(--sub);font-weight:700}
+.tlr .mo{display:block;font-size:11.5px;color:var(--mizu-d);font-weight:700;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlr .me{display:block;font-size:11.5px;color:var(--sub);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlr .rt{flex:none;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;
+  padding:11px 12px 11px 6px}
+.tlr .price{font-family:var(--f-disp);font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap}
+.tlr .price .cu{font-size:11px;color:var(--sub);margin-right:1px}
+.tlr .nocost{font-size:10.5px;font-weight:800;color:var(--mizu-d);background:var(--mizu-lt);
+  border-radius:999px;padding:5px 9px;white-space:nowrap}
+.tlr .ed{display:block;color:var(--dim);line-height:0}
+.tlr .ed .icon{width:14px;height:14px}
+.visit .price{margin-left:auto;font-family:var(--f-disp);font-size:13.5px;font-weight:800;color:var(--ink);white-space:nowrap}
+.visit .price .cu{font-size:11px;color:var(--sub);margin-right:1px}
+.visit .ved{color:var(--dim);padding:6px}
+.visit .ved .icon{width:15px;height:15px}
+
 /* ================= シート ================= */
 .sheet{position:fixed;inset:0;z-index:60;background:var(--ground);overflow-y:auto;display:none;
   flex-direction:column;-webkit-overflow-scrolling:touch;animation:slideup .26s cubic-bezier(.32,.9,.44,1)}
@@ -832,6 +889,20 @@ nav button.on .icon{stroke-width:2.3}
       </div>
     </div>
 
+    <button class="moneystrip" id="mstrip" data-goto="log"></button>
+
+    <div class="sec">さいきんのサ活<span class="cnt" id="rc-cnt"></span></div>
+    <div id="recent"></div>
+
+    <div class="homeacts">
+      <button class="hact" data-newfac="1"><span class="ic pink"><svg class="icon"><use href="#i-plus"/></svg></span>サウナを記録</button>
+      <button class="hact" data-goto="find"><span class="ic aqua"><svg class="icon"><use href="#i-compass"/></svg></span>全国からさがす</button>
+      <button class="hact" data-goto="stamp"><span class="ic wood"><svg class="icon"><use href="#i-stamp"/></svg></span>スタンプ帳</button>
+      <button class="hact" data-goto="set"><span class="ic grey"><svg class="icon"><use href="#i-gear"/></svg></span>せってい</button>
+    </div>
+
+    <div class="sec">おたのしみ</div>
+
     <div class="avatarcard">
       <div id="avatar"></div>
       <div class="lvl" id="lvl"></div>
@@ -850,21 +921,11 @@ nav button.on .icon{stroke-width:2.3}
 
     <div class="sec">もちもの<span class="cnt" id="item-count"></span></div>
     <div class="items" id="items"></div>
-
-    <div class="homeacts">
-      <button class="hact" data-newfac="1"><span class="ic pink"><svg class="icon"><use href="#i-plus"/></svg></span>サウナを記録</button>
-      <button class="hact" data-goto="find"><span class="ic aqua"><svg class="icon"><use href="#i-compass"/></svg></span>全国からさがす</button>
-      <button class="hact" data-goto="stamp"><span class="ic wood"><svg class="icon"><use href="#i-stamp"/></svg></span>スタンプ帳</button>
-      <button class="hact" data-goto="set"><span class="ic grey"><svg class="icon"><use href="#i-gear"/></svg></span>せってい</button>
-    </div>
-
-    <div class="sec">さいきん行ったサウナ</div>
-    <div class="grid" id="recent"></div>
   </section>
 
   <!-- ============ 一覧 ============ -->
   <section class="view" id="v-list">
-    <h2 class="vtitle">サウナ日記</h2>
+    <h2 class="vtitle">行ったお店・行きたいお店</h2>
     <div class="toolbar">
       <div class="search" id="searchbox">
         <svg class="icon"><use href="#i-search"/></svg>
@@ -945,6 +1006,13 @@ nav button.on .icon{stroke-width:2.3}
     <div class="badges" id="badges"></div>
   </section>
 
+  <!-- ============ りれき ============ -->
+  <section class="view" id="v-log">
+    <h2 class="vtitle">サ活のりれき</h2>
+    <div class="money" id="money"></div>
+    <div id="logtl"></div>
+  </section>
+
   <!-- ============ さがす ============ -->
   <section class="view" id="v-find">
     <h2 class="vtitle">全国からさがす</h2>
@@ -1003,7 +1071,8 @@ nav button.on .icon{stroke-width:2.3}
 
 <nav>
   <button class="on" data-tab="home"><svg class="icon"><use href="#i-onsen"/></svg>ホーム</button>
-  <button data-tab="list"><svg class="icon"><use href="#i-list"/></svg>日記</button>
+  <button data-tab="log"><svg class="icon"><use href="#i-clock"/></svg>りれき</button>
+  <button data-tab="list"><svg class="icon"><use href="#i-list"/></svg>お店</button>
   <button data-tab="find"><svg class="icon"><use href="#i-compass"/></svg>さがす</button>
   <button data-tab="stamp"><svg class="icon"><use href="#i-stamp"/></svg>スタンプ帳</button>
 </nav>
@@ -1042,10 +1111,14 @@ nav button.on .icon{stroke-width:2.3}
         <span>施設を登録して、スタンプを押します。温度・水風呂・ととのい度も残せます。</span>
       </div></li>
       <li><span class="wc-n">2</span><div>
+        <b>りれきと お金が ひと目で分かる</b>
+        <span>いつ・どこに行ったかが日付順に並びます。月ごと・年ごとのサウナ代もグラフで見えます。</span>
+      </div></li>
+      <li><span class="wc-n">3</span><div>
         <b>地図が染まっていく</b>
         <span>訪れた都道府県が桜色になります。47都道府県の制覇を目指しましょう。</span>
       </div></li>
-      <li><span class="wc-n">3</span><div>
+      <li><span class="wc-n">4</span><div>
         <b>サ活カードをシェアする</b>
         <span>記録から画像を作って、そのままSNSに投稿できます。</span>
       </div></li>
@@ -1159,7 +1232,7 @@ nav button.on .icon{stroke-width:2.3}
 <div class="sheet" id="sh-visit">
   <div class="sbar">
     <button class="btn ghost" data-close="sh-visit">やめる</button>
-    <div class="ttl">スタンプを押す</div>
+    <div class="ttl" id="v-ttl">スタンプを押す</div>
     <button class="btn pri" id="v-save">押す</button>
   </div>
   <div class="sbody">
@@ -1174,19 +1247,23 @@ nav button.on .icon{stroke-width:2.3}
     <div class="field">
       <label>ととのい度</label>
       <div class="chips5" id="v-tot">
-        ${""}<button data-tot="1">1</button><button data-tot="2">2</button><button data-tot="3">3</button><button data-tot="4">4</button><button data-tot="5">5</button>
+        <button data-tot="1">1</button><button data-tot="2">2</button><button data-tot="3">3</button><button data-tot="4">4</button><button data-tot="5">5</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>セット数</label>
+      <div class="chips5" id="v-sets">
+        <button data-sets="1">1</button><button data-sets="2">2</button><button data-sets="3">3</button><button data-sets="4">4</button><button data-sets="5">5</button>
       </div>
     </div>
     <div class="two">
-      <div class="field">
-        <label>セット数</label>
-        <div class="chips5" id="v-sets">
-          <button data-sets="1">1</button><button data-sets="2">2</button><button data-sets="3">3</button><button data-sets="4">4</button><button data-sets="5">5</button>
-        </div>
-      </div>
+      <div class="field"><label>かかったお金（円）</label><input type="number" id="v-cost" inputmode="numeric" placeholder="1200"></div>
       <div class="field"><label>水風呂（℃）</label><input type="number" id="v-water" inputmode="numeric" placeholder="15"></div>
     </div>
     <div class="field"><label>ひとことメモ（任意）</label><textarea id="v-memo" placeholder="今日もととのった…"></textarea></div>
+    <div id="v-delwrap" style="display:none">
+      <button class="btn dan" id="v-del" style="width:100%">この記録を消す</button>
+    </div>
   </div>
 </div>
 
@@ -2047,6 +2124,8 @@ let findShow = 40;
 let editing = null;
 let detailId = null;
 let visitTargetId = null;
+let visitEditId = null;
+let logYear = new Date().getFullYear();
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -2183,12 +2262,287 @@ function summary() {
 }
 
 /* ============ 描画 ============ */
-function renderAll() { renderStats(); renderHome(); renderList(); renderStamp(); renderFind(); renderInfo(); }
+function renderAll() { renderStats(); renderHome(); renderLog(); renderList(); renderStamp(); renderFind(); renderInfo(); }
+
+/* ============ りれきと お金 ============ */
+/* 記録の主役はここ。いつ・どこへ行って・いくら使ったかを、日付順にそのまま出す。 */
+
+const WD = ["日", "月", "火", "水", "木", "金", "土"];
+const yen = n => Math.round(Number(n) || 0).toLocaleString("ja-JP");
+/* グラフの中は桁が多いと読めないので、1万円から「1.2万」に丸める */
+const yenShort = n => n >= 10000 ? (n / 10000).toFixed(n >= 100000 ? 0 : 1) + "万" : yen(n);
+const visitCost = v => Math.max(0, Math.round(Number(v && v.cost) || 0));
+const yearOf = d => { const y = +String(d || "").slice(0, 4); return y > 1900 && y < 3000 ? y : 0; };
+const facCost = f => (f.visits || []).reduce((a, v) => a + visitCost(v), 0);
+
+/* 施設の中に散らばっている記録を、1本の時系列にならべ直す */
+function allVisits() {
+  const out = [];
+  for (const f of facilities) for (const v of (f.visits || [])) if (v.date) out.push({ v, f });
+  out.sort((a, b) => String(b.v.date).localeCompare(String(a.v.date))
+                  || String(b.v.id).localeCompare(String(a.v.id)));
+  return out;
+}
+
+function dataYears() {
+  const set = new Set([new Date().getFullYear()]);
+  for (const f of facilities) for (const v of (f.visits || [])) {
+    const y = yearOf(v.date);
+    if (y) set.add(y);
+  }
+  return [...set].sort((a, b) => a - b);
+}
+
+/* その年の 1〜12月ぶんの 回数と金額 */
+function costRows(year) {
+  const rows = [];
+  for (let m = 1; m <= 12; m++) rows.push({ m, n: 0, sum: 0, known: 0 });
+  let yn = 0, ysum = 0, yknown = 0;
+  for (const f of facilities) for (const v of (f.visits || [])) {
+    if (yearOf(v.date) !== year) continue;
+    const r = rows[+String(v.date).split("-")[1] - 1];
+    if (!r) continue;
+    const c = visitCost(v);
+    r.n++; yn++;
+    if (c > 0) { r.sum += c; r.known++; ysum += c; yknown++; }
+  }
+  return { rows, yn, ysum, yknown };
+}
+
+function moneySvg(rows, year) {
+  const max = Math.max(1, ...rows.map(r => r.sum));
+  const W = 30, H = 114, base = H - 16, top = 20;
+  const now = new Date();
+  const curM = year === now.getFullYear() ? now.getMonth() + 1 : 0;
+  const bars = rows.map((r, i) => {
+    const h = r.sum ? Math.max(3, Math.round(r.sum / max * (base - top))) : 0;
+    const x = i * W, cx = x + W / 2;
+    const fill = !r.sum ? "#F5E1E3" : r.m === curM ? "#D5507B" : "#EF6E96";
+    return `<g>
+      <rect x="${x + 5}" y="${base - h}" width="${W - 10}" height="${Math.max(h, 2)}" rx="4" fill="${fill}"/>
+      ${r.sum ? `<text x="${cx}" y="${base - h - 4}" text-anchor="middle" font-size="8.4" font-weight="800" fill="#57444A">${yenShort(r.sum)}</text>` : ""}
+      <text x="${cx}" y="${H - 4}" text-anchor="middle" font-size="8.6" font-weight="700" fill="${r.m === curM ? "#D5507B" : "#998486"}">${r.m}</text>
+    </g>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${12 * W} ${H}" role="img" aria-label="${year}年の月ごとのサウナ代">
+    <line x1="0" y1="${base + 0.5}" x2="${12 * W}" y2="${base + 0.5}" stroke="#F5E1E3" stroke-width="1.5"/>${bars}</svg>`;
+}
+
+/* りれきの1行。左半分＝お店をひらく、右半分＝この記録を直す */
+function tlRow(v, f) {
+  const p = String(v.date || "").split("-");
+  const md = p.length === 3 ? `${+p[1]}/${+p[2]}` : esc(v.date || "");
+  const wd = p.length === 3 ? WD[new Date(+p[0], +p[1] - 1, +p[2]).getDay()] : "";
+  const cost = visitCost(v);
+  const meta = [
+    v.totonoi ? "ととのい " + "●".repeat(v.totonoi) : "",
+    v.sets ? v.sets + "セット" : "",
+    v.water ? "水風呂 " + esc(v.water) + "℃" : ""
+  ].filter(Boolean).join("　");
+  return `<div class="tlr">
+    <button class="hit" data-open="${f.id}" aria-label="${esc(f.name)} をひらく">
+      <span class="dt"><b>${md}</b><i>${wd}</i></span>
+      <span class="bd">
+        <span class="nm">${esc(f.name)}</span>
+        <span class="pf">${esc(f.prefecture || "場所は未登録")}</span>
+        ${meta ? `<span class="mo">${meta}</span>` : ""}
+        ${v.memo ? `<span class="me">${esc(v.memo)}</span>` : ""}
+      </span>
+    </button>
+    <button class="rt" data-editvisit="${f.id}|${esc(v.id)}" aria-label="この記録を直す">
+      ${cost > 0
+        ? `<span class="price"><span class="cu">¥</span>${yen(cost)}</span>`
+        : `<span class="nocost">＋お金</span>`}
+      <span class="ed">${ico("pen")}</span>
+    </button>
+  </div>`;
+}
+
+function renderLog() {
+  const years = dataYears();
+  const lo = years[0], hi = years[years.length - 1];
+  if (logYear < lo) logYear = lo;
+  if (logYear > hi) logYear = hi;
+
+  const c = costRows(logYear);
+  const now = new Date();
+  const isCur = logYear === now.getFullYear();
+  const curM = now.getMonth() + 1;
+  const thisM = c.rows[curM - 1];
+  const monthsWith = c.rows.filter(r => r.sum > 0).length;
+  const avgPer = c.yknown ? Math.round(c.ysum / c.yknown) : 0;
+  const avgMon = monthsWith ? Math.round(c.ysum / monthsWith) : 0;
+  const missing = c.yn - c.yknown;
+
+  $("money").innerHTML = `
+    <div class="yr">
+      <button data-logyear="${logYear - 1}"${logYear <= lo ? " disabled" : ""} aria-label="前の年">${ico("back")}</button>
+      <b>${logYear}年のサウナ代</b>
+      <button data-logyear="${logYear + 1}"${logYear >= hi ? " disabled" : ""} aria-label="次の年" style="transform:scaleX(-1)">${ico("back")}</button>
+    </div>
+    <div class="mtiles">
+      <div class="mtile hot"><b><span class="cu">¥</span>${yen(c.ysum)}</b>
+        <span class="k2">1年の合計</span><span class="s2">${c.yn}回</span></div>
+      <div class="mtile"><b><span class="cu">¥</span>${yen(avgPer)}</b>
+        <span class="k2">1回あたり</span><span class="s2">${c.yknown}回の平均</span></div>
+      <div class="mtile"><b><span class="cu">¥</span>${yen(isCur ? thisM.sum : avgMon)}</b>
+        <span class="k2">${isCur ? "今月（" + curM + "月）" : "1か月あたり"}</span>
+        <span class="s2">${isCur ? thisM.n + "回" : "行った月の平均"}</span></div>
+    </div>
+    ${moneySvg(c.rows, logYear)}
+    <p class="note2">${
+      missing > 0 ? `お金を入れていない記録が ${missing} 件あります。りれきの「＋お金」から入れると合計に入ります。`
+      : c.yn ? "この年の記録は、お金もぜんぶ入力ずみです。"
+      : "この年の記録はまだありません。"
+    }</p>`;
+
+  const list = allVisits().filter(x => yearOf(x.v.date) === logYear);
+  if (!list.length) {
+    $("logtl").innerHTML = `<div class="empty" style="padding:30px 16px">
+      <div class="t">${logYear}年の記録はまだありません</div>
+      <div class="d">サウナに行ったら、お店をひらいて「スタンプを押す」</div>
+      <div class="emptyacts"><button class="btn pri" data-newfac="1">${ico("plus")}サウナを記録</button></div>
+    </div>`;
+    return;
+  }
+  let html = "", cm = 0;
+  for (const x of list) {
+    const m = +String(x.v.date).split("-")[1];
+    if (m !== cm) {
+      cm = m;
+      const r = c.rows[m - 1];
+      html += `<div class="tlmon">
+        <span class="mm">${logYear}年${m}月</span>
+        <span class="mc">${r.n}回</span>
+        <span class="ms"${r.sum > 0 ? "" : " style=\"color:var(--dim);font-size:11px\""}>${r.sum > 0 ? "¥" + yen(r.sum) : "お金は未入力"}</span></div>`;
+    }
+    html += tlRow(x.v, x.f);
+  }
+  $("logtl").innerHTML = html;
+}
+
+/* ホームの「さいきんのサ活」と、今月のお金の帯 */
+function renderRecent() {
+  const all = allVisits();
+  $("rc-cnt").textContent = all.length ? `ぜんぶで ${all.length} 回` : "";
+  $("recent").innerHTML = all.length
+    ? all.slice(0, 5).map(x => tlRow(x.v, x.f)).join("")
+      + `<button class="btn mizu" data-goto="log" style="width:100%;margin-top:2px">${ico("clock")}りれきを ぜんぶ見る</button>`
+    : `<div class="empty" style="padding:24px 16px">
+         <div class="t">まだ記録がありません</div>
+         <div class="d">「サウナを記録」から1軒目をどうぞ</div>
+       </div>`;
+
+  const now = new Date(), cy = now.getFullYear(), cm = now.getMonth() + 1;
+  const c = costRows(cy);
+  $("mstrip").innerHTML = `<span class="l">今月のサウナ代</span>
+    <b><span class="cu">¥</span>${yen(c.rows[cm - 1].sum)}</b>
+    <span class="r">${cy}年 ¥${yen(c.ysum)}／${c.yn}回 ›</span>`;
+}
+
+/* 施設の中の1件の記録（くわしい画面で使う） */
+function visitRowTail(f, v) {
+  const c = visitCost(v);
+  return `${c > 0 ? `<span class="price"><span class="cu">¥</span>${yen(c)}</span>` : ""}
+    <button class="ved" data-editvisit="${f.id}|${esc(v.id)}" aria-label="この記録を直す">${ico("pen")}</button>
+    <button class="del" data-delvisit="${esc(v.id)}" aria-label="この記録を削除">${ico("trash")}</button>`;
+}
+
+/* 前回と同じ値段のことが多いので、まず前回の金額、なければ施設の料金を入れておく */
+function suggestCost(f) {
+  const paid = (f.visits || []).filter(v => visitCost(v) > 0)
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if (paid.length) return String(visitCost(paid[0]));
+  const p = String(f.price || "").replace(/[^0-9]/g, "");
+  return p || "";
+}
+
+function openVisit(id, vid) {
+  const f = facilities.find(x => x.id === id);
+  if (!f) return;
+  visitTargetId = id;
+  visitEditId = vid || null;
+  $("v-facname").textContent = f.name;
+  const v = vid ? (f.visits || []).find(x => x.id === vid) : null;
+  if (v) {
+    $("v-ttl").textContent = "記録をなおす";
+    $("v-save").textContent = "なおす";
+    $("v-date").value = v.date || today();
+    $("v-memo").value = v.memo || "";
+    $("v-water").value = v.water || "";
+    /* あとから入れる人が多いので、空のときは前回の金額を出しておく */
+    $("v-cost").value = visitCost(v) > 0 ? String(visitCost(v)) : suggestCost(f);
+    visitDraft = { totonoi: +v.totonoi || 0, sets: +v.sets || 0 };
+    $("v-delwrap").style.display = "block";
+  } else {
+    $("v-ttl").textContent = "スタンプを押す";
+    $("v-save").textContent = "押す";
+    $("v-date").value = today();
+    $("v-memo").value = "";
+    $("v-water").value = "";
+    $("v-cost").value = suggestCost(f);
+    visitDraft = { totonoi: 0, sets: 0 };
+    $("v-delwrap").style.display = "none";
+  }
+  paintVisitChips();
+  open_("sh-visit");
+}
+
+function readCostInput() {
+  return Math.max(0, Math.round(Number(String($("v-cost").value).replace(/[^0-9.]/g, "")) || 0));
+}
+
+async function saveVisit() {
+  const cost = readCostInput();
+  /* 直す場合：すでにある記録を書きかえるだけ。カードは増やさない */
+  if (visitEditId) {
+    const f = facilities.find(x => x.id === visitTargetId);
+    const v = f && (f.visits || []).find(x => x.id === visitEditId);
+    if (!v) { close_("sh-visit"); return; }
+    v.date = $("v-date").value || v.date;
+    v.memo = $("v-memo").value.trim();
+    v.totonoi = visitDraft.totonoi;
+    v.sets = visitDraft.sets;
+    v.water = $("v-water").value.trim();
+    v.cost = cost;
+    f.updatedAt = Date.now();
+    await Store.put(f);
+    close_("sh-visit");
+    visitEditId = null;
+    renderAll();
+    if (detailId) openDetail(detailId);
+    toast("記録をなおしました");
+    return;
+  }
+  const r = await addVisit(visitTargetId, $("v-date").value, $("v-memo").value.trim(), {
+    totonoi: visitDraft.totonoi, sets: visitDraft.sets, water: $("v-water").value.trim(), cost
+  });
+  if (!r) return;
+  close_("sh-visit");
+  renderAll();
+  openDetail(r.f.id);
+  afterVisit(r);
+}
+
+async function delEditingVisit() {
+  const f = facilities.find(x => x.id === visitTargetId);
+  if (!f || !visitEditId) return;
+  if (!confirm("この記録を削除しますか？")) return;
+  f.visits = (f.visits || []).filter(v => v.id !== visitEditId);
+  f.updatedAt = Date.now();
+  await Store.put(f);
+  close_("sh-visit");
+  visitEditId = null;
+  renderAll();
+  if (detailId) openDetail(detailId);
+  toast("削除しました");
+}
+
 
 function gotoTab(name) {
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + name));
-  $("fab").style.display = name === "list" ? "flex" : "none";
+  $("fab").style.display = (name === "list" || name === "log") ? "flex" : "none";
   window.scrollTo({ top: 0 });
 }
 
@@ -2602,17 +2956,7 @@ function renderHome() {
         <svg viewBox="${it.vb}">${it.svg}</svg><span>${esc(it.nm)}</span></button>`;
     }).join("");
 
-  const rows = facilities
-    .filter(f => (f.visits || []).length)
-    .map(f => ({ f, last: f.visits.map(v => v.date).sort().pop() || "" }))
-    .sort((a, b) => String(b.last).localeCompare(String(a.last)))
-    .slice(0, 3);
-  $("recent").innerHTML = rows.length
-    ? rows.map(r => cardHtml(r.f)).join("")
-    : `<div class="empty" style="padding:24px 16px">
-         <div class="t">まだ記録がありません</div>
-         <div class="d">「サウナを記録」から1軒目をどうぞ</div>
-       </div>`;
+  renderRecent();
 }
 
 function renderStats() {
@@ -2976,7 +3320,7 @@ function openPrefSheet(pref) {
       </div>`;
     }).join("") : '<p style="color:var(--sub);font-size:13.5px;padding:2px">この県はまだ登録がありません。</p>'}
     <div class="emptyacts">
-      <button class="btn mizu" data-openlist="${esc(pref)}">日記でひらく</button>
+      <button class="btn mizu" data-openlist="${esc(pref)}">お店の一覧でひらく</button>
       ${cat ? `<button class="btn pri" data-findpref="${esc(pref)}">${esc(pref)}のサウナをさがす（${cat}軒）</button>` : ""}
     </div>`;
   open_("sh-pref");
@@ -3044,7 +3388,7 @@ function openDetail(id) {
       <button class="btn mizu" data-savecard="${f.id}">画像で保存</button>
     </div>
 
-    <div class="sec">ととのいの記録</div>
+    <div class="sec">ととのいの記録${visits.length && facCost(f) ? `<span class="cnt">通算 ¥${yen(facCost(f))}</span>` : ""}</div>
     ${visits.length
       ? visits.map((v, i) => `<div class="visit">
           <div class="n">${visits.length - i}</div>
@@ -3055,7 +3399,7 @@ function openDetail(id) {
               v.water ? "水風呂 " + esc(v.water) + "℃" : ""
             ].filter(Boolean).join("　")}</div>` : ""}
             ${v.memo ? `<div class="m">${esc(v.memo)}</div>` : ""}</div>
-          <button class="del" data-delvisit="${esc(v.id)}" aria-label="この記録を削除">${ico("trash")}</button>
+          ${visitRowTail(f, v)}
         </div>`).join("")
       : '<p style="color:var(--sub);font-size:13.5px;padding:2px">まだ記録がありません。行ったら「スタンプを押す」でこの旅に刻みましょう。</p>'}
   `;
@@ -3161,17 +3505,6 @@ function paintVisitChips() {
   document.querySelectorAll("#v-tot button").forEach(b => b.classList.toggle("on", +b.dataset.tot <= visitDraft.totonoi));
   document.querySelectorAll("#v-sets button").forEach(b => b.classList.toggle("on", +b.dataset.sets === visitDraft.sets));
 }
-function openVisit(id) {
-  visitTargetId = id;
-  const f = facilities.find(x => x.id === id);
-  $("v-facname").textContent = f ? f.name : "";
-  $("v-date").value = today();
-  $("v-memo").value = "";
-  $("v-water").value = "";
-  visitDraft = { totonoi: 0, sets: 0 };
-  paintVisitChips();
-  open_("sh-visit");
-}
 async function saveProfile() { try { await Store.put(profile); } catch (e) { /* 保存できなくても続ける */ } }
 
 async function addVisit(id, date, memo, extra) {
@@ -3183,7 +3516,8 @@ async function addVisit(id, date, memo, extra) {
   const beforeTk = drawsEarned();
   f.visits = (f.visits || []).concat([{
     id: uid(), date: date || today(), memo: memo || "",
-    totonoi: +ex2.totonoi || 0, sets: +ex2.sets || 0, water: ex2.water || ""
+    totonoi: +ex2.totonoi || 0, sets: +ex2.sets || 0, water: ex2.water || "",
+    cost: Math.max(0, Math.round(Number(ex2.cost) || 0))
   }]);
   f.updatedAt = Date.now();
   await Store.put(f);
@@ -3432,16 +3766,6 @@ function afterVisit(r) {
   }
 }
 
-async function saveVisit() {
-  const r = await addVisit(visitTargetId, $("v-date").value, $("v-memo").value.trim(), {
-    totonoi: visitDraft.totonoi, sets: visitDraft.sets, water: $("v-water").value.trim()
-  });
-  if (!r) return;
-  close_("sh-visit");
-  renderAll();
-  openDetail(r.f.id);
-  afterVisit(r);
-}
 
 /* ============ シート ============ */
 function open_(id) { $(id).classList.add("on"); document.body.style.overflow = "hidden"; }
@@ -3666,6 +3990,16 @@ document.addEventListener("click", async ev => {
   if (hit("#d-visit")) { openVisit(detailId); return; }
   if (hit("#d-edit")) { openEdit(detailId); return; }
 
+  const evb = hit("[data-editvisit]");
+  if (evb) {
+    const q = String(evb.dataset.editvisit).split("|");
+    openVisit(q[0], q[1]);
+    return;
+  }
+
+  const ly = hit("[data-logyear]");
+  if (ly) { logYear = +ly.dataset.logyear; renderLog(); window.scrollTo({ top: 0 }); return; }
+
   const dv = hit("[data-delvisit]");
   if (dv && detailId) {
     if (!confirm("この記録を削除しますか？")) return;
@@ -3684,6 +4018,7 @@ $("sum-save").onclick = saveSummary;
 $("fd-near").onclick = findNearby;
 $("e-save").onclick = saveEdit;
 $("v-save").onclick = saveVisit;
+$("v-del").onclick = delEditingVisit;
 
 $("d-fav").onclick = async () => {
   const f = facilities.find(x => x.id === detailId);
