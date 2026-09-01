@@ -799,6 +799,11 @@ nav button.on .icon{stroke-width:2.3}
 .info .i>.icon{width:19px;height:19px;color:var(--sakura);margin-top:3px}
 .info .i .v{flex:1;min-width:0;word-break:break-word;font-size:14.5px}
 .info .i .k{font-size:10.5px;color:var(--sub);font-weight:800;letter-spacing:.06em;display:block}
+.maplinks{display:flex;gap:16px;flex-wrap:wrap;margin-top:5px}
+.maplinks a{font-weight:700}
+.geonote{font-size:11.5px;color:var(--sub);margin-top:4px}
+.geobtn{font-size:11.5px;color:var(--mizu-d);font-weight:700;text-decoration:underline;
+  text-underline-offset:3px;padding:2px 0}
 .subline{display:flex;justify-content:space-between;align-items:center;max-width:290px;padding:1px 0}
 .subline span{font-size:13px;color:var(--sub)}
 .visit{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--sh)}
@@ -2205,20 +2210,57 @@ function jpAddress(displayName, addr) {
   return (post ? "〒" + post + " " : "") + rest;
 }
 
-async function lookupPlace(name, pref, area) {
+/* 町名や市の「代表点」ではなく、その建物そのものを指している結果かどうか。
+   代表点の座標を使うと、地図がまちの真ん中に落ちてしまう */
+const AREA_TYPES = ["neighbourhood", "suburb", "quarter", "city", "town", "village", "hamlet",
+                    "municipality", "county", "state", "province", "postcode", "city_district",
+                    "district", "ward", "island", "administrative", "residential", "road"];
+function isPinpoint(r) {
+  const cls = r.category || r.class || "";
+  if (cls === "place" || cls === "boundary" || cls === "highway") return false;
+  return AREA_TYPES.indexOf(r.addresstype || "") < 0;
+}
+
+/* 候補に点数をつけて、いちばん確からしい一件をえらぶ */
+function geoScore(r) {
+  let s = 0;
+  if (isPinpoint(r)) s += 100;                   // 建物そのものを指している
+  if ((r.address || {}).house_number) s += 10;   // 番地まで分かっている
+  if (r.type === "parking") s -= 30;             // 駐車場は施設本体ではない
+  return s;
+}
+
+async function nominatim(q) {
   const gap = 1200 - (Date.now() - lastLookup);   // 相手のサーバに優しく1秒以上あける
   if (gap > 0) await new Promise(r => setTimeout(r, gap));
   lastLookup = Date.now();
 
-  const q = [name, area, pref].filter(Boolean).join(" ");
   const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1"
-            + "&extratags=1&limit=1&accept-language=ja&q=" + encodeURIComponent(q);
+            + "&extratags=1&limit=5&countrycodes=jp&accept-language=ja&q=" + encodeURIComponent(q);
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error("network");
-  const rows = await res.json();
+  return await res.json();
+}
+
+async function lookupPlace(name, pref, area) {
+  /* 言い方を変えながら、見つかるまで順に試す
+     （「SPA銭湯ゆっこ盛岡」は空振りでも「ゆっこ盛岡」なら当たる、といったことがある） */
+  const tries = [];
+  if (area) tries.push([name, area, pref]);
+  tries.push([name, pref]);
+  const seg = String(name).split(/[\s　・&＆]+/).filter(w => w.length >= 2)
+                          .sort((a, b) => b.length - a.length)[0];
+  if (seg && seg !== name) tries.push([seg, area, pref]);
+
+  let rows = [];
+  for (const t of tries) {
+    rows = await nominatim(t.filter(Boolean).join(" "));
+    if (rows.length) break;
+  }
   if (!rows.length) return null;
 
-  const r = rows[0], a = r.address || {}, x = r.extratags || {};
+  const r = rows.slice().sort((u, v) => geoScore(v) - geoScore(u))[0];
+  const a = r.address || {}, x = r.extratags || {};
   const address = jpAddress(r.display_name, a);
   const charge = String(x.charge || "").match(/\d[\d,]*/);
   return {
@@ -2227,7 +2269,10 @@ async function lookupPlace(name, pref, area) {
     phone: x.phone || x["contact:phone"] || "",
     website: x.website || x["contact:website"] || "",
     price: charge ? charge[0].replace(/,/g, "") : "",
-    hours: x.opening_hours || ""
+    hours: x.opening_hours || "",
+    /* 地図とナビをその一点に合わせるための緯度経度。まちの代表点は採らない */
+    lat: (isPinpoint(r) && isFinite(parseFloat(r.lat))) ? parseFloat(r.lat) : null,
+    lon: (isPinpoint(r) && isFinite(parseFloat(r.lon))) ? parseFloat(r.lon) : null
   };
 }
 
@@ -2238,6 +2283,37 @@ function fillEmpty(f, d) {
     if (d[k] && !f[k]) { f[k] = d[k]; n++; }
   }
   return n;
+}
+
+/* 緯度経度をおぼえる。ここが入ると地図もナビもその建物にぴたりと止まる */
+function setGeo(f, d) {
+  if (!d || d.lat == null || d.lon == null) return false;
+  f.lat = d.lat; f.lon = d.lon; f.geoTried = Date.now();
+  return true;
+}
+
+/* 住所から市区町村のあたりだけを取り出す（さがすときの手がかりにする） */
+function cityOf(f) {
+  const ad = fullAddress(f).replace(/〒\s*\d{3}-?\d{4}\s*/g, "")
+                           .replace(f.prefecture || "", "").trim();
+  const m = ad.match(/^.{1,10}?[市区町村]/);
+  return m ? m[0] : "";
+}
+
+/* 位置がまだ分からない店を、一度だけ静かにしらべる（詳細をひらいたとき） */
+async function ensureGeo(f) {
+  if (!f || hasGeo(f) || f.geoTried) return false;
+  f.geoTried = Date.now();                       // 続けて何度も問い合わせない
+  try {
+    const d = await lookupPlace(f.name, f.prefecture, cityOf(f));
+    const got = setGeo(f, d);
+    if (d && (fillEmpty(f, d) || got)) f.updatedAt = Date.now();
+    await Store.put(f);                          // 見つからなくても「しらべた」ことは残す
+    return got;
+  } catch (e) {
+    f.geoTried = 0;                              // 電波が無かっただけなら次にまた試す
+    return false;
+  }
 }
 
 /* ============ 画像 ============ */
@@ -2569,11 +2645,43 @@ function gotoTab(name) {
   window.scrollTo({ top: 0 });
 }
 
+/* 都道府県＋住所をひとつにまとめる（住所に県名が入っていれば重ねない） */
+function fullAddress(f) {
+  const ad = (f.address || "").trim();
+  const pref = (f.prefecture || "").trim();
+  if (!ad) return pref;
+  return (pref && ad.indexOf(pref) < 0) ? (pref + " " + ad) : ad;
+}
+
 /* 住所に都道府県が入っていれば重ねて出さない */
 function addrLine(f) {
-  let ad = (f.address || "").trim();
-  if (f.prefecture && ad.indexOf(f.prefecture) < 0) ad = (f.prefecture + " " + ad).trim();
-  return ad || "住所は未登録";
+  return fullAddress(f) || "住所は未登録";
+}
+
+/* 緯度経度をおぼえているか */
+function hasGeo(f) {
+  return Number.isFinite(f && f.lat) && Number.isFinite(f && f.lon);
+}
+
+/* 地図にわたす行き先。
+   緯度経度があればその一点（番地が無くてもぴたりと合う）、
+   無ければ店名＋住所（Google が店そのものを見つけてくれる）。
+   郵便番号の〒は検索のじゃまになるので外す */
+function mapTarget(f) {
+  if (hasGeo(f)) return f.lat.toFixed(7) + "," + f.lon.toFixed(7);
+  const place = fullAddress(f).replace(/〒\s*/g, "");
+  return [f.name, place].filter(Boolean).join(" ").trim();
+}
+
+/* 地図で開く */
+function mapUrl(f) {
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(mapTarget(f));
+}
+
+/* 今いる場所からの道あんない（スマホでは Google マップのナビが立ち上がる） */
+function navUrl(f) {
+  return "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination="
+       + encodeURIComponent(mapTarget(f));
 }
 
 function cardHtml(f) {
@@ -3228,6 +3336,7 @@ async function addFromCatalog(i) {
     const d = await lookupPlace(c.n, c.p, c.a);
     if (!d) { toast(`「${c.n}」を追加しました（住所は見つからず）`); return; }
     if (d.address) f.address = d.address;          // 県+市だけの仮住所は上書きしてよい
+    setGeo(f, d);                                  // 正確な位置をおぼえる
     fillEmpty(f, d);
     f.updatedAt = Date.now();
     await Store.put(f);
@@ -3416,7 +3525,7 @@ function openDetail(id) {
 
   const visits = (f.visits || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const subs = SUBS.filter(([k]) => (f.subRatings || {})[k] > 0);
-  const mapQ = encodeURIComponent([f.prefecture, f.address].filter(Boolean).join(" ") || f.name);
+  const geoKnown = hasGeo(f);
 
   $("d-body").innerHTML = `
     <div class="hero">${(f.photos || []).length
@@ -3440,8 +3549,15 @@ function openDetail(id) {
     </div>
 
     <div class="info">
-      ${f.prefecture || f.address ? `<div class="i">${ico("pin")}<span class="v"><span class="k">住所</span>${esc([f.prefecture, f.address].filter(Boolean).join(" "))}
-        <br><a href="https://www.google.com/maps/search/?api=1&query=${mapQ}" target="_blank" rel="noopener">地図で開く →</a></span></div>` : ""}
+      ${f.prefecture || f.address ? `<div class="i">${ico("pin")}<span class="v"><span class="k">住所</span>${esc(fullAddress(f))}
+        <div class="maplinks">
+          <a href="${esc(mapUrl(f))}" target="_blank" rel="noopener">地図で開く →</a>
+          <a href="${esc(navUrl(f))}" target="_blank" rel="noopener">ここへナビ →</a>
+        </div>
+        <div class="geonote">${geoKnown
+          ? `この店の正確な位置をおぼえています（${f.lat.toFixed(5)}, ${f.lon.toFixed(5)}）`
+          : `<button class="geobtn" id="d-geo">正確な位置をしらべる</button>`}</div>
+        </span></div>` : ""}
       ${f.phone
         ? `<div class="i">${ico("phone")}<span class="v"><span class="k">電話番号</span><a href="tel:${esc(f.phone.replace(/[^0-9+]/g, ""))}">${esc(f.phone)}</a></span></div>`
         : `<div class="i">${ico("phone")}<span class="v"><span class="k">電話番号</span>
@@ -3477,6 +3593,11 @@ function openDetail(id) {
       : '<p style="color:var(--sub);font-size:13.5px;padding:2px">まだ記録がありません。行ったら「スタンプを押す」でこの旅に刻みましょう。</p>'}
   `;
   open_("sh-detail");
+
+  /* 位置をまだ知らない店は、開いたついでに静かにしらべておく */
+  if (!geoKnown && (f.name || "")) {
+    ensureGeo(f).then(got => { if (got && detailId === f.id) openDetail(f.id); });
+  }
 }
 
 /* ============ 編集 ============ */
@@ -3557,6 +3678,8 @@ async function saveEdit() {
     createdAt: editing.createdAt || Date.now(),
     updatedAt: Date.now()
   };
+  /* おぼえていた緯度経度は引きつぐ（住所や名前を手で直したときは捨てて、しらべ直す） */
+  if (hasGeo(editing)) { f.lat = editing.lat; f.lon = editing.lon; f.geoTried = editing.geoTried || Date.now(); }
   if (isNew && $("e-date").value) f.visits = [{ id: uid(), date: $("e-date").value, memo: "" }];
 
   try { await Store.put(f); }
@@ -4065,6 +4188,18 @@ document.addEventListener("click", async ev => {
   if (hit("#d-visit")) { openVisit(detailId); return; }
   if (hit("#d-edit")) { openEdit(detailId); return; }
 
+  if (hit("#d-geo")) {
+    const f = facilities.find(x => x.id === detailId);
+    if (!f) return;
+    toast("位置をしらべています…");
+    f.geoTried = 0;                                   // もう一度ためす
+    const got = await ensureGeo(f);
+    renderAll();
+    if (detailId === f.id) openDetail(f.id);
+    toast(got ? "正確な位置をおぼえました" : "地図のデータに見あたりませんでした。店名でさがします");
+    return;
+  }
+
   const evb = hit("[data-editvisit]");
   if (evb) {
     const q = String(evb.dataset.editvisit).split("|");
@@ -4149,11 +4284,20 @@ async function lookupIntoForm(area) {
     if (d.website && !$("e-web").value) { $("e-web").value = d.website; n++; }
     if (d.price && !$("e-price").value) { $("e-price").value = d.price; n++; }
     if (d.hours && !$("e-hours").value) { $("e-hours").value = d.hours; n++; }
+    if (editing && setGeo(editing, d)) n++;    // 正確な位置もいっしょにおぼえる
     toast(n ? `${n} か所に自動で入れました` : "新しく入る情報はありませんでした");
   } catch (e) {
     toast("つながりませんでした。電波を確かめてください");
   }
 }
+
+/* 名前や住所を手で書きかえたら、おぼえていた位置は当てにならないので忘れる */
+function forgetGeo() {
+  if (!editing) return;
+  editing.lat = null; editing.lon = null; editing.geoTried = 0;
+}
+$("e-name").oninput = forgetGeo;
+$("e-addr").oninput = forgetGeo;
 
 $("e-lookup").onclick = () => lookupIntoForm("");
 
